@@ -58,15 +58,15 @@
     };
 
     if (window.location.host === 'spryhub.io') {
-        config.auth.clientId = 'e97f9d6c719f9a7afa79';
+        config.auth.github.clientId = 'e97f9d6c719f9a7afa79';
         config.auth.github.gatekeeperUrl = 'https://api.github.io/gatekeeper/github/authenticate/';
     }
     else if (window.location.host.indexOf('alpha') === 0 ) {
-        config.auth.clientId = 'b2ffd1bcf0274ff2c276';
+        config.auth.github.clientId = 'b2ffd1bcf0274ff2c276';
         config.auth.github.gatekeeperUrl = 'https://alpha-api.github.io/gatekeeper/github/authenticate/';
     }
     else if (window.location.host.indexOf('beta') === 0) {
-        config.auth.clientId = 'c14976868037a88f0380';
+        config.auth.github.clientId = 'c14976868037a88f0380';
         config.auth.github.gatekeeperUrl = 'https://beta-api.github.io/gatekeeper/github/authenticate/';
     }
 
