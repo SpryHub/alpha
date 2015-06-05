@@ -5,10 +5,6 @@
 })();
 
 (function() {
-    'use strict';
-    angular.module('eventbus', []);
-})();
-(function() {
   'use strict';
   angular.module('auth', ['eventbus', 'ngStorage'])
     .run(AuthBootstrap);
@@ -22,6 +18,10 @@
   }
 })();
 
+(function() {
+    'use strict';
+    angular.module('eventbus', []);
+})();
 (function() {
   angular.module('github', ['eventbus']);
 })();
@@ -59,15 +59,15 @@
 
     if (window.location.host === 'spryhub.io') {
         config.auth.github.clientId = 'e97f9d6c719f9a7afa79';
-        config.auth.github.gatekeeperUrl = 'https://api.github.io/gatekeeper/github/authenticate/';
+        config.auth.github.gatekeeperUrl = 'https://api.spryhub.io/gatekeeper/github/authenticate/';
     }
     else if (window.location.host.indexOf('alpha') === 0 ) {
         config.auth.github.clientId = 'b2ffd1bcf0274ff2c276';
-        config.auth.github.gatekeeperUrl = 'https://alpha-api.github.io/gatekeeper/github/authenticate/';
+        config.auth.github.gatekeeperUrl = 'https://alpha-api.spryhub.io/gatekeeper/github/authenticate/';
     }
     else if (window.location.host.indexOf('beta') === 0) {
         config.auth.github.clientId = 'c14976868037a88f0380';
-        config.auth.github.gatekeeperUrl = 'https://beta-api.github.io/gatekeeper/github/authenticate/';
+        config.auth.github.gatekeeperUrl = 'https://beta-api.spryhub.io/gatekeeper/github/authenticate/';
     }
 
     angular.module('spryhub')
@@ -364,38 +364,6 @@ $templateCache.put("ng/components/github/githubLoginButton.directive/github-logi
 
 })();
 (function() {
-  'use strict';
-  angular.module('eventbus')
-    .service('eventbus', EventBus);
-
-  // EventBus provides an event registry that can be used by both
-  // services which have no scope and controllers which do have
-  // scope.
-  //
-  // $rootScope.emit is used as the mechanism so events emitted
-  // through the event bus do not propogate through the scope tree.
-
-  EventBus.$inject = ['$rootScope'];
-
-  function EventBus($rootScope) {
-    var service = this;
-
-    return {
-      emit: emit,
-      on: on,
-    };
-
-    function emit(name, args) {
-      return $rootScope.$emit(name, args);
-    }
-
-    function on(name, listener) {
-      return $rootScope.$on(name, listener);
-    }
-  }
-})();
-
-(function() {
     'use strict';
     angular.module('auth')
         .provider('authService', AuthServiceProvider);
@@ -482,6 +450,38 @@ $templateCache.put("ng/components/github/githubLoginButton.directive/github-logi
             return service.storage.user;
         }
     }
+})();
+
+(function() {
+  'use strict';
+  angular.module('eventbus')
+    .service('eventbus', EventBus);
+
+  // EventBus provides an event registry that can be used by both
+  // services which have no scope and controllers which do have
+  // scope.
+  //
+  // $rootScope.emit is used as the mechanism so events emitted
+  // through the event bus do not propogate through the scope tree.
+
+  EventBus.$inject = ['$rootScope'];
+
+  function EventBus($rootScope) {
+    var service = this;
+
+    return {
+      emit: emit,
+      on: on,
+    };
+
+    function emit(name, args) {
+      return $rootScope.$emit(name, args);
+    }
+
+    function on(name, listener) {
+      return $rootScope.$on(name, listener);
+    }
+  }
 })();
 
 (function() {
