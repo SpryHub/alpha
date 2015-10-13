@@ -1,5 +1,5 @@
 /**
- * @license AngularJS v1.3.20
+ * @license AngularJS v1.3.15
  * (c) 2010-2014 Google, Inc. http://angularjs.org
  * License: MIT
  */
@@ -54,7 +54,7 @@ function minErr(module, ErrorConstructor) {
       return match;
     });
 
-    message = message + '\nhttp://errors.angularjs.org/1.3.20/' +
+    message = message + '\nhttp://errors.angularjs.org/1.3.15/' +
       (module ? module + '/' : '') + code;
     for (i = 2; i < arguments.length; i++) {
       message = message + (i == 2 ? '?' : '&') + 'p' + (i - 2) + '=' +
@@ -149,7 +149,6 @@ function minErr(module, ErrorConstructor) {
   createMap: true,
 
   NODE_TYPE_ELEMENT: true,
-  NODE_TYPE_ATTRIBUTE: true,
   NODE_TYPE_TEXT: true,
   NODE_TYPE_COMMENT: true,
   NODE_TYPE_DOCUMENT: true,
@@ -261,9 +260,7 @@ function isArrayLike(obj) {
     return false;
   }
 
-  // Support: iOS 8.2 (not reproducible in simulator)
-  // "length" in obj used to prevent JIT error (gh-11508)
-  var length = "length" in Object(obj) && obj.length;
+  var length = obj.length;
 
   if (obj.nodeType === NODE_TYPE_ELEMENT && length) {
     return true;
@@ -1045,8 +1042,8 @@ function toJsonReplacer(key, value) {
  * stripped since angular uses this notation internally.
  *
  * @param {Object|Array|Date|string|number} obj Input to be serialized into JSON.
- * @param {boolean|number} [pretty=2] If set to true, the JSON output will contain newlines and whitespace.
- *    If set to an integer, the JSON output will contain that many spaces per indentation.
+ * @param {boolean|number=} pretty If set to true, the JSON output will contain newlines and whitespace.
+ *    If set to an integer, the JSON output will contain that many spaces per indentation (the default is 2).
  * @returns {string|undefined} JSON-ified string representing `obj`.
  */
 function toJson(obj, pretty) {
@@ -1678,7 +1675,6 @@ function createMap() {
 }
 
 var NODE_TYPE_ELEMENT = 1;
-var NODE_TYPE_ATTRIBUTE = 2;
 var NODE_TYPE_TEXT = 3;
 var NODE_TYPE_COMMENT = 8;
 var NODE_TYPE_DOCUMENT = 9;
@@ -1915,17 +1911,10 @@ function setupModuleLoader(window) {
            * @ngdoc method
            * @name angular.Module#filter
            * @module ng
-           * @param {string} name Filter name - this must be a valid angular expression identifier
+           * @param {string} name Filter name.
            * @param {Function} filterFactory Factory function for creating new instance of filter.
            * @description
            * See {@link ng.$filterProvider#register $filterProvider.register()}.
-           *
-           * <div class="alert alert-warning">
-           * **Note:** Filter names must be valid angular {@link expression} identifiers, such as `uppercase` or `orderBy`.
-           * Names with special characters, such as hyphens and dots, are not allowed. If you wish to namespace
-           * your filters, then you can use capitalization (`myappSubsectionFilterx`) or underscores
-           * (`myapp_subsection_filterx`).
-           * </div>
            */
           filter: invokeLater('$filterProvider', 'register'),
 
@@ -2139,11 +2128,11 @@ function toDebugString(obj) {
  * - `codeName` – `{string}` – Code name of the release, such as "jiggling-armfat".
  */
 var version = {
-  full: '1.3.20',    // all of these placeholder strings will be replaced by grunt's
+  full: '1.3.15',    // all of these placeholder strings will be replaced by grunt's
   major: 1,    // package task
   minor: 3,
-  dot: 20,
-  codeName: 'shallow-translucence'
+  dot: 15,
+  codeName: 'locality-filtration'
 };
 
 
@@ -2319,7 +2308,7 @@ function publishExternalAPI(angular) {
  * Angular to manipulate the DOM in a cross-browser compatible way. **jqLite** implements only the most
  * commonly needed functionality with the goal of having a very small footprint.</div>
  *
- * To use `jQuery`, simply ensure it is loaded before the `angular.js` file.
+ * To use jQuery, simply load it before `DOMContentLoaded` event fired.
  *
  * <div class="alert">**Note:** all element references in Angular are always wrapped with jQuery or
  * jqLite; they are never raw DOM references.</div>
@@ -2335,7 +2324,7 @@ function publishExternalAPI(angular) {
  * - [`children()`](http://api.jquery.com/children/) - Does not support selectors
  * - [`clone()`](http://api.jquery.com/clone/)
  * - [`contents()`](http://api.jquery.com/contents/)
- * - [`css()`](http://api.jquery.com/css/) - Only retrieves inline-styles, does not call `getComputedStyle()`. As a setter, does not convert numbers to strings or append 'px'.
+ * - [`css()`](http://api.jquery.com/css/) - Only retrieves inline-styles, does not call `getComputedStyle()`
  * - [`data()`](http://api.jquery.com/data/)
  * - [`detach()`](http://api.jquery.com/detach/)
  * - [`empty()`](http://api.jquery.com/empty/)
@@ -2878,10 +2867,6 @@ forEach({
   },
 
   attr: function(element, name, value) {
-    var nodeType = element.nodeType;
-    if (nodeType === NODE_TYPE_TEXT || nodeType === NODE_TYPE_ATTRIBUTE || nodeType === NODE_TYPE_COMMENT) {
-      return;
-    }
     var lowercasedName = lowercase(name);
     if (BOOLEAN_ATTR[lowercasedName]) {
       if (isDefined(value)) {
@@ -3572,7 +3557,7 @@ function annotate(fn, strictDi, name) {
  * Return an instance of the service.
  *
  * @param {string} name The name of the instance to retrieve.
- * @param {string=} caller An optional string to provide the origin of the function call for error messages.
+ * @param {string} caller An optional string to provide the origin of the function call for error messages.
  * @return {*} The instance.
  */
 
@@ -3583,8 +3568,8 @@ function annotate(fn, strictDi, name) {
  * @description
  * Invoke the method and supply the method arguments from the `$injector`.
  *
- * @param {Function|Array.<string|Function>} fn The injectable function to invoke. Function parameters are
- *   injected according to the {@link guide/di $inject Annotation} rules.
+ * @param {!Function} fn The function to invoke. Function parameters are injected according to the
+ *   {@link guide/di $inject Annotation} rules.
  * @param {Object=} self The `this` for the invoked method.
  * @param {Object=} locals Optional object. If preset then any argument names are read from this
  *                         object first, before the `$injector` is consulted.
@@ -3851,8 +3836,8 @@ function annotate(fn, strictDi, name) {
  * configure your service in a provider.
  *
  * @param {string} name The name of the instance.
- * @param {Function|Array.<string|Function>} $getFn The injectable $getFn for the instance creation.
- *                      Internally this is a short hand for `$provide.provider(name, {$get: $getFn})`.
+ * @param {function()} $getFn The $getFn for the instance creation. Internally this is a short hand
+ *                            for `$provide.provider(name, {$get: $getFn})`.
  * @returns {Object} registered provider instance
  *
  * @example
@@ -3887,8 +3872,7 @@ function annotate(fn, strictDi, name) {
  * as a type/class.
  *
  * @param {string} name The name of the instance.
- * @param {Function|Array.<string|Function>} constructor An injectable class (constructor function)
- *     that will be instantiated.
+ * @param {Function} constructor A class (constructor function) that will be instantiated.
  * @returns {Object} registered provider instance
  *
  * @example
@@ -3987,7 +3971,7 @@ function annotate(fn, strictDi, name) {
  * object which replaces or wraps and delegates to the original service.
  *
  * @param {string} name The name of the service to decorate.
- * @param {Function|Array.<string|Function>} decorator This function will be invoked when the service needs to be
+ * @param {function()} decorator This function will be invoked when the service needs to be
  *    instantiated and should return the decorated service instance. The function is called using
  *    the {@link auto.$injector#invoke injector.invoke} method and is therefore fully injectable.
  *    Local injection arguments:
@@ -4954,7 +4938,7 @@ function Browser(window, document, $log, $sniffer) {
 
   function getHash(url) {
     var index = url.indexOf('#');
-    return index === -1 ? '' : url.substr(index);
+    return index === -1 ? '' : url.substr(index + 1);
   }
 
   /**
@@ -5081,7 +5065,7 @@ function Browser(window, document, $log, $sniffer) {
         // Do the assignment again so that those two variables are referentially identical.
         lastHistoryState = cachedState;
       } else {
-        if (!sameBase || reloadLocation) {
+        if (!sameBase) {
           reloadLocation = url;
         }
         if (replace) {
@@ -5836,8 +5820,7 @@ function $TemplateCacheProvider() {
  *       templateNamespace: 'html',
  *       scope: false,
  *       controller: function($scope, $element, $attrs, $transclude, otherInjectables) { ... },
- *       controllerAs: 'stringIdentifier',
- *       bindToController: false,
+ *       controllerAs: 'stringAlias',
  *       require: 'siblingDirectiveName', // or // ['^parentDirectiveName', '?optionalDirectiveName', '?^optionalParent'],
  *       compile: function compile(tElement, tAttrs, transclude) {
  *         return {
@@ -6156,15 +6139,9 @@ function $TemplateCacheProvider() {
  *   * `iAttrs` - instance attributes - Normalized list of attributes declared on this element shared
  *     between all directive linking functions.
  *
- *   * `controller` - the directive's required controller instance(s) - Instances are shared
- *     among all directives, which allows the directives to use the controllers as a communication
- *     channel. The exact value depends on the directive's `require` property:
- *       * `string`: the controller instance
- *       * `array`: array of controller instances
- *       * no controller(s) required: `undefined`
- *
- *     If a required controller cannot be found, and it is optional, the instance is `null`,
- *     otherwise the {@link error:$compile:ctreq Missing Required Controller} error is thrown.
+ *   * `controller` - a controller instance - A controller instance if at least one directive on the
+ *     element defines a controller. The controller is shared among all the directives, which allows
+ *     the directives to use the controllers as a communication channel.
  *
  *   * `transcludeFn` - A transclude linking function pre-bound to the correct transclusion scope.
  *     This is the same as the `$transclude`
@@ -6190,7 +6167,7 @@ function $TemplateCacheProvider() {
  *
  * ### Transclusion
  *
- * Transclusion is the process of extracting a collection of DOM elements from one part of the DOM and
+ * Transclusion is the process of extracting a collection of DOM element from one part of the DOM and
  * copying them to another part of the DOM, while maintaining their connection to the original AngularJS
  * scope from where they were taken.
  *
@@ -7945,7 +7922,7 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
 
       $compileNode.empty();
 
-      $templateRequest(templateUrl)
+      $templateRequest($sce.getTrustedResourceUrl(templateUrl))
         .then(function(content) {
           var compileNode, tempTemplateAttrs, $template, childBoundTranscludeFn;
 
@@ -8992,7 +8969,7 @@ function $HttpProvider() {
      *  headers: {
      *    'Content-Type': undefined
      *  },
-     *  data: { test: 'test' }
+     *  data: { test: 'test' },
      * }
      *
      * $http(req).success(function(){...}).error(function(){...});
@@ -9427,8 +9404,6 @@ function $HttpProvider() {
       }
 
       promise.success = function(fn) {
-        assertArgFn(fn, 'fn');
-
         promise.then(function(response) {
           fn(response.data, response.status, response.headers, config);
         });
@@ -9436,8 +9411,6 @@ function $HttpProvider() {
       };
 
       promise.error = function(fn) {
-        assertArgFn(fn, 'fn');
-
         promise.then(null, function(response) {
           fn(response.data, response.status, response.headers, config);
         });
@@ -9731,8 +9704,8 @@ function $HttpProvider() {
        * Resolves the raw $http promise.
        */
       function resolvePromise(response, status, headers, statusText) {
-        //status: HTTP response status code, 0, -1 (aborted by timeout / promise)
-        status = status >= -1 ? status : 0;
+        // normalize internal statuses to 0
+        status = Math.max(status, 0);
 
         (isSuccess(status) ? deferred.resolve : deferred.reject)({
           data: response,
@@ -9839,7 +9812,7 @@ function createHttpBackend($browser, createXhr, $browserDefer, callbacks, rawDoc
       xhr.onload = function requestLoaded() {
         var statusText = xhr.statusText || '';
 
-        // responseText is the old-school way of retrieving response (supported by IE9)
+        // responseText is the old-school way of retrieving response (supported by IE8 & 9)
         // response/responseType properties were introduced in XHR Level2 spec (supported by IE10)
         var response = ('response' in xhr) ? xhr.response : xhr.responseText;
 
@@ -9918,7 +9891,7 @@ function createHttpBackend($browser, createXhr, $browserDefer, callbacks, rawDoc
   };
 
   function jsonpReq(url, callbackId, done) {
-    // we can't use jQuery/jqLite here because jQuery does crazy stuff with script elements, e.g.:
+    // we can't use jQuery/jqLite here because jQuery does crazy shit with script elements, e.g.:
     // - fetches local scripts via XHR and evals them
     // - adds and immediately removes script elements from the document
     var script = rawDocument.createElement('script'), callback = null;
@@ -10655,12 +10628,12 @@ function serverBase(url) {
  *
  * @constructor
  * @param {string} appBase application base URL
- * @param {string} appBaseNoFile application base URL stripped of any filename
  * @param {string} basePrefix url path prefix
  */
-function LocationHtml5Url(appBase, appBaseNoFile, basePrefix) {
+function LocationHtml5Url(appBase, basePrefix) {
   this.$$html5 = true;
   basePrefix = basePrefix || '';
+  var appBaseNoFile = stripFile(appBase);
   parseAbsoluteUrl(appBase, this);
 
 
@@ -10734,10 +10707,10 @@ function LocationHtml5Url(appBase, appBaseNoFile, basePrefix) {
  *
  * @constructor
  * @param {string} appBase application base URL
- * @param {string} appBaseNoFile application base URL stripped of any filename
  * @param {string} hashPrefix hashbang prefix
  */
-function LocationHashbangUrl(appBase, appBaseNoFile, hashPrefix) {
+function LocationHashbangUrl(appBase, hashPrefix) {
+  var appBaseNoFile = stripFile(appBase);
 
   parseAbsoluteUrl(appBase, this);
 
@@ -10751,7 +10724,7 @@ function LocationHashbangUrl(appBase, appBaseNoFile, hashPrefix) {
     var withoutBaseUrl = beginsWith(appBase, url) || beginsWith(appBaseNoFile, url);
     var withoutHashUrl;
 
-    if (!isUndefined(withoutBaseUrl) && withoutBaseUrl.charAt(0) === '#') {
+    if (withoutBaseUrl.charAt(0) === '#') {
 
       // The rest of the url starts with a hash so we have
       // got either a hashbang path or a plain hash fragment
@@ -10765,15 +10738,7 @@ function LocationHashbangUrl(appBase, appBaseNoFile, hashPrefix) {
       // There was no hashbang path nor hash fragment:
       // If we are in HTML5 mode we use what is left as the path;
       // Otherwise we ignore what is left
-      if (this.$$html5) {
-        withoutHashUrl = withoutBaseUrl;
-      } else {
-        withoutHashUrl = '';
-        if (isUndefined(withoutBaseUrl)) {
-          appBase = url;
-          this.replace();
-        }
-      }
+      withoutHashUrl = this.$$html5 ? withoutBaseUrl : '';
     }
 
     parseAppUrl(withoutHashUrl, this);
@@ -10846,12 +10811,13 @@ function LocationHashbangUrl(appBase, appBaseNoFile, hashPrefix) {
  *
  * @constructor
  * @param {string} appBase application base URL
- * @param {string} appBaseNoFile application base URL stripped of any filename
  * @param {string} hashPrefix hashbang prefix
  */
-function LocationHashbangInHtml5Url(appBase, appBaseNoFile, hashPrefix) {
+function LocationHashbangInHtml5Url(appBase, hashPrefix) {
   this.$$html5 = true;
   LocationHashbangUrl.apply(this, arguments);
+
+  var appBaseNoFile = stripFile(appBase);
 
   this.$$parseLinkUrl = function(url, relHref) {
     if (relHref && relHref[0] === '#') {
@@ -10882,7 +10848,7 @@ function LocationHashbangInHtml5Url(appBase, appBaseNoFile, hashPrefix) {
         hash = this.$$hash ? '#' + encodeUriSegment(this.$$hash) : '';
 
     this.$$url = encodePath(this.$$path) + (search ? '?' + search : '') + hash;
-    // include hashPrefix in $$absUrl when $$url is empty so IE9 does not reload page because of removal of '#'
+    // include hashPrefix in $$absUrl when $$url is empty so IE8 & 9 do not reload page because of removal of '#'
     this.$$absUrl = appBase + hashPrefix + this.$$url;
   };
 
@@ -10986,19 +10952,11 @@ var locationPrototype = {
    *
    * Return host of current url.
    *
-   * Note: compared to the non-angular version `location.host` which returns `hostname:port`, this returns the `hostname` portion only.
-   *
    *
    * ```js
    * // given url http://example.com/#/some/path?foo=bar&baz=xoxo
    * var host = $location.host();
    * // => "example.com"
-   *
-   * // given url http://user:password@example.com:8080/#/some/path?foo=bar&baz=xoxo
-   * host = $location.host();
-   * // => "example.com"
-   * host = location.host;
-   * // => "example.com:8080"
    * ```
    *
    * @return {string} host of current url.
@@ -11388,9 +11346,7 @@ function $LocationProvider() {
       appBase = stripHash(initialUrl);
       LocationMode = LocationHashbangUrl;
     }
-    var appBaseNoFile = stripFile(appBase);
-
-    $location = new LocationMode(appBase, appBaseNoFile, '#' + hashPrefix);
+    $location = new LocationMode(appBase, '#' + hashPrefix);
     $location.$$parseLinkUrl(initialUrl, initialUrl);
 
     $location.$$state = $browser.state();
@@ -11470,13 +11426,6 @@ function $LocationProvider() {
 
     // update $location when $browser url changes
     $browser.onUrlChange(function(newUrl, newState) {
-
-      if (isUndefined(beginsWith(appBaseNoFile, newUrl))) {
-        // If we are navigating outside of the app then force a reload
-        $window.location.href = newUrl;
-        return;
-      }
-
       $rootScope.$evalAsync(function() {
         var oldUrl = $location.absUrl();
         var oldState = $location.$$state;
@@ -11759,25 +11708,6 @@ function ensureSafeMemberName(name, fullExpression) {
       || name === "__proto__") {
     throw $parseMinErr('isecfld',
         'Attempting to access a disallowed field in Angular expressions! '
-        + 'Expression: {0}', fullExpression);
-  }
-  return name;
-}
-
-function getStringValue(name, fullExpression) {
-  // From the JavaScript docs:
-  // Property names must be strings. This means that non-string objects cannot be used
-  // as keys in an object. Any non-string object, including a number, is typecasted
-  // into a string via the toString method.
-  //
-  // So, to ensure that we are checking the same `name` that JavaScript would use,
-  // we cast it to a string, if possible.
-  // Doing `name + ''` can cause a repl error if the result to `toString` is not a string,
-  // this is, this will handle objects that misbehave.
-  name = name + '';
-  if (!isString(name)) {
-    throw $parseMinErr('iseccst',
-        'Cannot convert object to primitive value! '
         + 'Expression: {0}', fullExpression);
   }
   return name;
@@ -12424,7 +12354,7 @@ Parser.prototype = {
 
     return extend(function $parseObjectIndex(self, locals) {
       var o = obj(self, locals),
-          i = getStringValue(indexFn(self, locals), expression),
+          i = indexFn(self, locals),
           v;
 
       ensureSafeMemberName(i, expression);
@@ -12433,7 +12363,7 @@ Parser.prototype = {
       return v;
     }, {
       assign: function(self, value, locals) {
-        var key = ensureSafeMemberName(getStringValue(indexFn(self, locals), expression), expression);
+        var key = ensureSafeMemberName(indexFn(self, locals), expression);
         // prevent overwriting of Function.constructor which would break ensureSafeObject check
         var o = ensureSafeObject(obj(self, locals), expression);
         if (!o) obj.assign(self, o = {}, locals);
@@ -13581,7 +13511,7 @@ function $$RAFProvider() { //rAF
                                $window.webkitCancelRequestAnimationFrame;
 
     var rafSupported = !!requestAnimationFrame;
-    var rafFn = rafSupported
+    var raf = rafSupported
       ? function(fn) {
           var id = requestAnimationFrame(fn);
           return function() {
@@ -13595,47 +13525,9 @@ function $$RAFProvider() { //rAF
           };
         };
 
-    queueFn.supported = rafSupported;
+    raf.supported = rafSupported;
 
-    var cancelLastRAF;
-    var taskCount = 0;
-    var taskQueue = [];
-    return queueFn;
-
-    function flush() {
-      for (var i = 0; i < taskQueue.length; i++) {
-        var task = taskQueue[i];
-        if (task) {
-          taskQueue[i] = null;
-          task();
-        }
-      }
-      taskCount = taskQueue.length = 0;
-    }
-
-    function queueFn(asyncFn) {
-      var index = taskQueue.length;
-
-      taskCount++;
-      taskQueue.push(asyncFn);
-
-      if (index === 0) {
-        cancelLastRAF = rafFn(flush);
-      }
-
-      return function cancelQueueFn() {
-        if (index >= 0) {
-          taskQueue[index] = null;
-          index = null;
-
-          if (--taskCount === 0 && cancelLastRAF) {
-            cancelLastRAF();
-            cancelLastRAF = null;
-            taskQueue.length = 0;
-          }
-        }
-      };
-    }
+    return raf;
   }];
 }
 
@@ -13725,6 +13617,7 @@ function $RootScopeProvider() {
           this.$$childHead = this.$$childTail = null;
       this.$$listeners = {};
       this.$$listenerCount = {};
+      this.$$watchersCount = 0;
       this.$id = nextUid();
       this.$$ChildScope = null;
     }
@@ -13747,9 +13640,12 @@ function $RootScopeProvider() {
      * A root scope can be retrieved using the {@link ng.$rootScope $rootScope} key from the
      * {@link auto.$injector $injector}. Child scopes are created using the
      * {@link ng.$rootScope.Scope#$new $new()} method. (Most scopes are created automatically when
-     * compiled HTML template is executed.) See also the {@link guide/scope Scopes guide} for
-     * an in-depth introduction and usage examples.
+     * compiled HTML template is executed.)
      *
+     * Here is a simple scope snippet to show how you can interact with the scope.
+     * ```html
+     * <file src="./test/ng/rootScopeSpec.js" tag="docs1" />
+     * ```
      *
      * # Inheritance
      * A scope can inherit from a parent scope, as in this example:
@@ -13910,9 +13806,9 @@ function $RootScopeProvider() {
        *
        *
        * If you want to be notified whenever {@link ng.$rootScope.Scope#$digest $digest} is called,
-       * you can register a `watchExpression` function with no `listener`. (Be prepared for
-       * multiple calls to your `watchExpression` because it will execute multiple times in a
-       * single {@link ng.$rootScope.Scope#$digest $digest} cycle if a change is detected.)
+       * you can register a `watchExpression` function with no `listener`. (Since `watchExpression`
+       * can execute multiple times per {@link ng.$rootScope.Scope#$digest $digest} cycle when a
+       * change is detected, be prepared for multiple calls to your listener.)
        *
        * After a watcher is registered with the scope, the `listener` fn is called asynchronously
        * (via {@link ng.$rootScope.Scope#$evalAsync $evalAsync}) to initialize the
@@ -15584,7 +15480,7 @@ function $SceDelegateProvider() {
  *      characters: '`:`', '`/`', '`.`', '`?`', '`&`' and ';'.  It's a useful wildcard for use
  *      in a whitelist.
  *    - `**`: matches zero or more occurrences of *any* character.  As such, it's not
- *      appropriate for use in a scheme, domain, etc. as it would match too much.  (e.g.
+ *      not appropriate to use in for a scheme, domain, etc. as it would match too much.  (e.g.
  *      http://**.example.com/ would match http://evil.com/?ignore=.example.com/ and that might
  *      not have been the intention.)  Its usage at the very end of the path is ok.  (e.g.
  *      http://foo.example.com/templates/**).
@@ -15592,11 +15488,11 @@ function $SceDelegateProvider() {
  *    - *Caveat*:  While regular expressions are powerful and offer great flexibility,  their syntax
  *      (and all the inevitable escaping) makes them *harder to maintain*.  It's easy to
  *      accidentally introduce a bug when one updates a complex expression (imho, all regexes should
- *      have good test coverage).  For instance, the use of `.` in the regex is correct only in a
+ *      have good test coverage.).  For instance, the use of `.` in the regex is correct only in a
  *      small number of cases.  A `.` character in the regex used when matching the scheme or a
  *      subdomain could be matched against a `:` or literal `.` that was likely not intended.   It
  *      is highly recommended to use the string patterns and only fall back to regular expressions
- *      as a last resort.
+ *      if they as a last resort.
  *    - The regular expression must be an instance of RegExp (i.e. not a string.)  It is
  *      matched against the **entire** *normalized / absolute URL* of the resource being tested
  *      (even when the RegExp did not have the `^` and `$` codes.)  In addition, any flags
@@ -15606,7 +15502,7 @@ function $SceDelegateProvider() {
  *      remember to escape your regular expression (and be aware that you might need more than
  *      one level of escaping depending on your templating engine and the way you interpolated
  *      the value.)  Do make use of your platform's escaping mechanism as it might be good
- *      enough before coding your own.  E.g. Ruby has
+ *      enough before coding your own.  e.g. Ruby has
  *      [Regexp.escape(str)](http://www.ruby-doc.org/core-2.0.0/Regexp.html#method-c-escape)
  *      and Python has [re.escape](http://docs.python.org/library/re.html#re.escape).
  *      Javascript lacks a similar built in function for escaping.  Take a look at Google
@@ -16192,14 +16088,12 @@ var $compileMinErr = minErr('$compile');
  * @name $templateRequest
  *
  * @description
- * The `$templateRequest` service runs security checks then downloads the provided template using
- * `$http` and, upon success, stores the contents inside of `$templateCache`. If the HTTP request
- * fails or the response data of the HTTP request is empty, a `$compile` error will be thrown (the
- * exception can be thwarted by setting the 2nd parameter of the function to true). Note that the
- * contents of `$templateCache` are trusted, so the call to `$sce.getTrustedUrl(tpl)` is omitted
- * when `tpl` is of type string and `$templateCache` has the matching entry.
+ * The `$templateRequest` service downloads the provided template using `$http` and, upon success,
+ * stores the contents inside of `$templateCache`. If the HTTP request fails or the response data
+ * of the HTTP request is empty, a `$compile` error will be thrown (the exception can be thwarted
+ * by setting the 2nd parameter of the function to true).
  *
- * @param {string|TrustedResourceUrl} tpl The HTTP request template URL
+ * @param {string} tpl The HTTP request template URL
  * @param {boolean=} ignoreRequestError Whether or not to ignore the exception when the request fails or the template is empty
  *
  * @return {Promise} the HTTP Promise for the given.
@@ -16207,18 +16101,9 @@ var $compileMinErr = minErr('$compile');
  * @property {number} totalPendingRequests total amount of pending template requests being downloaded.
  */
 function $TemplateRequestProvider() {
-  this.$get = ['$templateCache', '$http', '$q', '$sce', function($templateCache, $http, $q, $sce) {
+  this.$get = ['$templateCache', '$http', '$q', function($templateCache, $http, $q) {
     function handleRequestFn(tpl, ignoreRequestError) {
       handleRequestFn.totalPendingRequests++;
-
-      // We consider the template cache holds only trusted templates, so
-      // there's no need to go through whitelisting again for keys that already
-      // are included in there. This also makes Angular accept any script
-      // directive, no matter its name. However, we still need to unwrap trusted
-      // types.
-      if (!isString(tpl) || !$templateCache.get(tpl)) {
-        tpl = $sce.getTrustedResourceUrl(tpl);
-      }
 
       var transformResponse = $http.defaults && $http.defaults.transformResponse;
 
@@ -16480,12 +16365,19 @@ var originUrl = urlResolve(window.location.href);
  *
  * Implementation Notes for IE
  * ---------------------------
- * IE <= 10 normalizes the URL when assigned to the anchor node similar to the other
+ * IE >= 8 and <= 10 normalizes the URL when assigned to the anchor node similar to the other
  * browsers.  However, the parsed components will not be set if the URL assigned did not specify
  * them.  (e.g. if you assign a.href = "foo", then a.protocol, a.host, etc. will be empty.)  We
  * work around that by performing the parsing in a 2nd step by taking a previously normalized
  * URL (e.g. by assigning to a.href) and assigning it a.href again.  This correctly populates the
  * properties such as protocol, hostname, port, etc.
+ *
+ * IE7 does not normalize the URL when assigned to an anchor node.  (Apparently, it does, if one
+ * uses the inner HTML approach to assign the URL as part of an HTML snippet -
+ * http://stackoverflow.com/a/472729)  However, setting img[src] does normalize the URL.
+ * Unfortunately, setting img[src] to something like "javascript:foo" on IE throws an exception.
+ * Since the primary usage for normalizing URLs is to sanitize such URLs, we can't use that
+ * method and IE < 8 is unsupported.
  *
  * References:
  *   http://developer.mozilla.org/en-US/docs/Web/API/HTMLAnchorElement
@@ -16616,13 +16508,6 @@ function $WindowProvider() {
  * Dependency Injected. To achieve this a filter definition consists of a factory function which is
  * annotated with dependencies and is responsible for creating a filter function.
  *
- * <div class="alert alert-warning">
- * **Note:** Filter names must be valid angular {@link expression} identifiers, such as `uppercase` or `orderBy`.
- * Names with special characters, such as hyphens and dots, are not allowed. If you wish to namespace
- * your filters, then you can use capitalization (`myappSubsectionFilterx`) or underscores
- * (`myapp_subsection_filterx`).
- * </div>
- *
  * ```js
  *   // Filter registration
  *   function MyModule($provide, $filterProvider) {
@@ -16704,13 +16589,6 @@ function $FilterProvider($provide) {
    * @name $filterProvider#register
    * @param {string|Object} name Name of the filter function, or an object map of filters where
    *    the keys are the filter names and the values are the filter factories.
-   *
-   *    <div class="alert alert-warning">
-   *    **Note:** Filter names must be valid angular {@link expression} identifiers, such as `uppercase` or `orderBy`.
-   *    Names with special characters, such as hyphens and dots, are not allowed. If you wish to namespace
-   *    your filters, then you can use capitalization (`myappSubsectionFilterx`) or underscores
-   *    (`myapp_subsection_filterx`).
-   *    </div>
    * @returns {Object} Registered filter instance, or if a map of filters was provided then a map
    *    of the registered filter instances.
    */
@@ -16884,16 +16762,14 @@ function filterFilter() {
   return function(array, expression, comparator) {
     if (!isArray(array)) return array;
 
-    var expressionType = (expression !== null) ? typeof expression : 'null';
     var predicateFn;
     var matchAgainstAnyProp;
 
-    switch (expressionType) {
+    switch (typeof expression) {
       case 'function':
         predicateFn = expression;
         break;
       case 'boolean':
-      case 'null':
       case 'number':
       case 'string':
         matchAgainstAnyProp = true;
@@ -16919,14 +16795,6 @@ function createPredicateFn(expression, comparator, matchAgainstAnyProp) {
     comparator = equals;
   } else if (!isFunction(comparator)) {
     comparator = function(actual, expected) {
-      if (isUndefined(actual)) {
-        // No substring matching against `undefined`
-        return false;
-      }
-      if ((actual === null) || (expected === null)) {
-        // No substring matching against `null`; only match against `null`
-        return actual === expected;
-      }
       if (isObject(actual) || isObject(expected)) {
         // Prevent an object to be considered equal to a string like `'[object'`
         return false;
@@ -17077,8 +16945,6 @@ function currencyFilter($locale) {
  * @description
  * Formats a number as text.
  *
- * If the input is null or undefined, it will just be returned.
- * If the input is infinite (Infinity/-Infinity) the Infinity symbol '∞' is returned.
  * If the input is not a number an empty string is returned.
  *
  * @param {number|string} number Number to format.
@@ -17687,7 +17553,7 @@ function limitToFilter() {
  *    Can be one of:
  *
  *    - `function`: Getter function. The result of this function will be sorted using the
- *      `<`, `===`, `>` operator.
+ *      `<`, `=`, `>` operator.
  *    - `string`: An Angular expression. The result of this expression is used to compare elements
  *      (for example `name` to sort by a property called `name` or `name.substr(0, 3)` to sort by
  *      3 first characters of a property called `name`). The result of a constant expression
@@ -18798,11 +18664,11 @@ function FormController(element, attrs, $scope, $animate, $interpolate) {
        <form name="myForm" ng-controller="FormController" class="my-form">
          userType: <input name="input" ng-model="userType" required>
          <span class="error" ng-show="myForm.input.$error.required">Required!</span><br>
-         <code>userType = {{userType}}</code><br>
-         <code>myForm.input.$valid = {{myForm.input.$valid}}</code><br>
-         <code>myForm.input.$error = {{myForm.input.$error}}</code><br>
-         <code>myForm.$valid = {{myForm.$valid}}</code><br>
-         <code>myForm.$error.required = {{!!myForm.$error.required}}</code><br>
+         <tt>userType = {{userType}}</tt><br>
+         <tt>myForm.input.$valid = {{myForm.input.$valid}}</tt><br>
+         <tt>myForm.input.$error = {{myForm.input.$error}}</tt><br>
+         <tt>myForm.$valid = {{myForm.$valid}}</tt><br>
+         <tt>myForm.$error.required = {{!!myForm.$error.required}}</tt><br>
         </form>
       </file>
       <file name="protractor.js" type="protractor">
@@ -18909,7 +18775,7 @@ var ngFormDirective = formDirectiveFactory(true);
   DIRTY_CLASS: false,
   UNTOUCHED_CLASS: false,
   TOUCHED_CLASS: false,
-  ngModelMinErr: false,
+  $ngModelMinErr: false,
 */
 
 // Regex code is obtained from SO: https://stackoverflow.com/questions/3143070/javascript-regex-iso-datetime#answer-3143231
@@ -19490,11 +19356,7 @@ var inputType = {
    * Text input with number validation and transformation. Sets the `number` validation
    * error if not a valid number.
    *
-   * <div class="alert alert-warning">
-   * The model must always be of type `number` otherwise Angular will throw an error.
-   * Be aware that a string containing a number is not enough. See the {@link ngModel:numfmt}
-   * error docs for more information and an example of how to convert your model if necessary.
-   * </div>
+   * The model must always be a number, otherwise Angular will throw an error.
    *
    * @param {string} ngModel Assignable angular expression to data-bind to.
    * @param {string=} name Property name of the form under which the control is published.
@@ -20073,7 +19935,7 @@ function createDateInputType(type, regexp, parseDate, format) {
 
     ctrl.$formatters.push(function(value) {
       if (value && !isDate(value)) {
-        throw ngModelMinErr('datefmt', 'Expected `{0}` to be a date', value);
+        throw $ngModelMinErr('datefmt', 'Expected `{0}` to be a date', value);
       }
       if (isValidDate(value)) {
         previousDate = value;
@@ -20150,7 +20012,7 @@ function numberInputType(scope, element, attr, ctrl, $sniffer, $browser) {
   ctrl.$formatters.push(function(value) {
     if (!ctrl.$isEmpty(value)) {
       if (!isNumber(value)) {
-        throw ngModelMinErr('numfmt', 'Expected `{0}` to be a number', value);
+        throw $ngModelMinErr('numfmt', 'Expected `{0}` to be a number', value);
       }
       value = value.toString();
     }
@@ -20243,7 +20105,7 @@ function parseConstantExpr($parse, context, name, expression, fallback) {
   if (isDefined(expression)) {
     parseFn = $parse(expression);
     if (!parseFn.constant) {
-      throw ngModelMinErr('constexpr', 'Expected constant expression for `{0}`, but saw ' +
+      throw minErr('ngModel')('constexpr', 'Expected constant expression for `{0}`, but saw ' +
                                    '`{1}`.', name, expression);
     }
     return parseFn(context);
@@ -21202,13 +21064,17 @@ var ngClassEvenDirective = classDirective('Even', 1);
  * document; alternatively, the css rule above must be included in the external stylesheet of the
  * application.
  *
+ * Legacy browsers, like IE7, do not provide attribute selector support (added in CSS 2.1) so they
+ * cannot match the `[ng\:cloak]` selector. To work around this limitation, you must add the css
+ * class `ng-cloak` in addition to the `ngCloak` directive as shown in the example below.
+ *
  * @element ANY
  *
  * @example
    <example>
      <file name="index.html">
         <div id="template1" ng-cloak>{{ 'hello' }}</div>
-        <div id="template2" class="ng-cloak">{{ 'world' }}</div>
+        <div id="template2" ng-cloak class="ng-cloak">{{ 'hello IE7' }}</div>
      </file>
      <file name="protractor.js" type="protractor">
        it('should remove the template directive and css class', function() {
@@ -22422,8 +22288,8 @@ var ngIfDirective = ['$animate', function($animate) {
  * @param {Object} angularEvent Synthetic event object.
  * @param {String} src URL of content to load.
  */
-var ngIncludeDirective = ['$templateRequest', '$anchorScroll', '$animate',
-                  function($templateRequest,   $anchorScroll,   $animate) {
+var ngIncludeDirective = ['$templateRequest', '$anchorScroll', '$animate', '$sce',
+                  function($templateRequest,   $anchorScroll,   $animate,   $sce) {
   return {
     restrict: 'ECA',
     priority: 400,
@@ -22459,7 +22325,7 @@ var ngIncludeDirective = ['$templateRequest', '$anchorScroll', '$animate',
           }
         };
 
-        scope.$watch(srcExp, function ngIncludeWatchAction(src) {
+        scope.$watch($sce.parseAsResourceUrl(srcExp), function ngIncludeWatchAction(src) {
           var afterAnimation = function() {
             if (isDefined(autoScrollExp) && (!autoScrollExp || scope.$eval(autoScrollExp))) {
               $anchorScroll();
@@ -22747,7 +22613,8 @@ var VALID_CLASS = 'ng-valid',
     TOUCHED_CLASS = 'ng-touched',
     PENDING_CLASS = 'ng-pending';
 
-var ngModelMinErr = minErr('ngModel');
+
+var $ngModelMinErr = new minErr('ngModel');
 
 /**
  * @ngdoc type
@@ -22998,7 +22865,7 @@ var NgModelController = ['$scope', '$exceptionHandler', '$attrs', '$element', '$
         }
       };
     } else if (!parsedNgModel.assign) {
-      throw ngModelMinErr('nonassign', "Expression '{0}' is non-assignable. Element: {1}",
+      throw $ngModelMinErr('nonassign', "Expression '{0}' is non-assignable. Element: {1}",
           $attr.ngModel, startingTag($element));
     }
   };
@@ -23232,7 +23099,7 @@ var NgModelController = ['$scope', '$exceptionHandler', '$attrs', '$element', '$
    * If the validity changes to invalid, the model will be set to `undefined`,
    * unless {@link ngModelOptions `ngModelOptions.allowInvalid`} is `true`.
    * If the validity changes to valid, it will set the model to the last available valid
-   * `$modelValue`, i.e. either the last parsed value or the last value set from the scope.
+   * modelValue, i.e. either the last parsed value or the last value set from the scope.
    */
   this.$validate = function() {
     // ignore $validate before model is initialized
@@ -23327,7 +23194,7 @@ var NgModelController = ['$scope', '$exceptionHandler', '$attrs', '$element', '$
       forEach(ctrl.$asyncValidators, function(validator, name) {
         var promise = validator(modelValue, viewValue);
         if (!isPromiseLike(promise)) {
-          throw ngModelMinErr("$asyncValidators",
+          throw $ngModelMinErr("$asyncValidators",
             "Expected asynchronous validator to return a promise but got '{0}' instead.", promise);
         }
         setValidity(name, undefined);
@@ -23540,10 +23407,7 @@ var NgModelController = ['$scope', '$exceptionHandler', '$attrs', '$element', '$
 
     // if scope model value and ngModel value are out of sync
     // TODO(perf): why not move this to the action fn?
-    if (modelValue !== ctrl.$modelValue &&
-       // checks for NaN is needed to allow setting the model to NaN when there's an asyncValidator
-       (ctrl.$modelValue === ctrl.$modelValue || modelValue === modelValue)
-    ) {
+    if (modelValue !== ctrl.$modelValue) {
       ctrl.$modelValue = ctrl.$$rawModelValue = modelValue;
       parserValid = undefined;
 
@@ -23720,11 +23584,10 @@ var NgModelController = ['$scope', '$exceptionHandler', '$attrs', '$element', '$
            var _name = 'Brian';
            $scope.user = {
              name: function(newName) {
-              // Note that newName can be undefined for two reasons:
-              // 1. Because it is called as a getter and thus called with no arguments
-              // 2. Because the property should actually be set to undefined. This happens e.g. if the
-              //    input is invalid
-              return arguments.length ? (_name = newName) : _name;
+               if (angular.isDefined(newName)) {
+                 _name = newName;
+               }
+               return _name;
              }
            };
          }]);
@@ -23932,11 +23795,7 @@ var DEFAULT_REGEXP = /(\s+|^)default(\s+|$)/;
           var _name = 'Brian';
           $scope.user = {
             name: function(newName) {
-              // Note that newName can be undefined for two reasons:
-              // 1. Because it is called as a getter and thus called with no arguments
-              // 2. Because the property should actually be set to undefined. This happens e.g. if the
-              //    input is invalid
-              return arguments.length ? (_name = newName) : _name;
+              return angular.isDefined(newName) ? (_name = newName) : _name;
             }
           };
         }]);
@@ -25226,12 +25085,12 @@ var ngHideDirective = ['$animate', function($animate) {
    </example>
  */
 var ngStyleDirective = ngDirective(function(scope, element, attr) {
-  scope.$watch(attr.ngStyle, function ngStyleWatchAction(newStyles, oldStyles) {
+  scope.$watchCollection(attr.ngStyle, function ngStyleWatchAction(newStyles, oldStyles) {
     if (oldStyles && (newStyles !== oldStyles)) {
       forEach(oldStyles, function(val, style) { element.css(style, '');});
     }
     if (newStyles) element.css(newStyles);
-  }, true);
+  });
 });
 
 /**
@@ -25277,7 +25136,7 @@ var ngStyleDirective = ngDirective(function(scope, element, attr) {
  *
  * @scope
  * @priority 1200
- * @param {*} ngSwitch|on expression to match against <code>ng-switch-when</code>.
+ * @param {*} ngSwitch|on expression to match against <tt>ng-switch-when</tt>.
  * On child elements add:
  *
  * * `ngSwitchWhen`: the case statement to match against. If match then this
@@ -25294,7 +25153,7 @@ var ngStyleDirective = ngDirective(function(scope, element, attr) {
       <div ng-controller="ExampleController">
         <select ng-model="selection" ng-options="item for item in items">
         </select>
-        <code>selection={{selection}}</code>
+        <tt>selection={{selection}}</tt>
         <hr/>
         <div class="animate-switch-container"
           ng-switch on="selection">
@@ -25875,7 +25734,7 @@ var selectDirective = ['$compile', '$parse', function($compile,   $parse) {
             selectElement.val(viewValue);
             if (viewValue === '') emptyOption.prop('selected', true); // to make IE9 happy
           } else {
-            if (viewValue == null && emptyOption) {
+            if (isUndefined(viewValue) && emptyOption) {
               selectElement.val('');
             } else {
               selectCtrl.renderUnknownOption(viewValue);
@@ -26382,9 +26241,8 @@ var patternDirective = function() {
         ctrl.$validate();
       });
 
-      ctrl.$validators.pattern = function(modelValue, viewValue) {
-        // HTML5 pattern constraint validates the input value, so we validate the viewValue
-        return ctrl.$isEmpty(viewValue) || isUndefined(regexp) || regexp.test(viewValue);
+      ctrl.$validators.pattern = function(value) {
+        return ctrl.$isEmpty(value) || isUndefined(regexp) || regexp.test(value);
       };
     }
   };
@@ -26448,7 +26306,7 @@ var minlengthDirective = function() {
 
 })(window, document);
 
-!window.angular.$$csp() && window.angular.element(document.head).prepend('<style type="text/css">@charset "UTF-8";[ng\\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak,.ng-hide:not(.ng-hide-animate){display:none !important;}ng\\:form{display:block;}</style>');
+!window.angular.$$csp() && window.angular.element(document).find('head').prepend('<style type="text/css">@charset "UTF-8";[ng\\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak,.ng-hide:not(.ng-hide-animate){display:none !important;}ng\\:form{display:block;}</style>');
 /*!
  * jQuery JavaScript Library v2.1.4
  * http://jquery.com/
@@ -35661,9 +35519,9 @@ return jQuery;
 }));
 
 /*!
- * Bootstrap v3.3.5 (http://getbootstrap.com)
+ * Bootstrap v3.3.4 (http://getbootstrap.com)
  * Copyright 2011-2015 Twitter, Inc.
- * Licensed under the MIT license
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
  */
 
 if (typeof jQuery === 'undefined') {
@@ -35679,7 +35537,7 @@ if (typeof jQuery === 'undefined') {
 }(jQuery);
 
 /* ========================================================================
- * Bootstrap: transition.js v3.3.5
+ * Bootstrap: transition.js v3.3.4
  * http://getbootstrap.com/javascript/#transitions
  * ========================================================================
  * Copyright 2011-2015 Twitter, Inc.
@@ -35739,7 +35597,7 @@ if (typeof jQuery === 'undefined') {
 }(jQuery);
 
 /* ========================================================================
- * Bootstrap: alert.js v3.3.5
+ * Bootstrap: alert.js v3.3.4
  * http://getbootstrap.com/javascript/#alerts
  * ========================================================================
  * Copyright 2011-2015 Twitter, Inc.
@@ -35758,7 +35616,7 @@ if (typeof jQuery === 'undefined') {
     $(el).on('click', dismiss, this.close)
   }
 
-  Alert.VERSION = '3.3.5'
+  Alert.VERSION = '3.3.4'
 
   Alert.TRANSITION_DURATION = 150
 
@@ -35834,7 +35692,7 @@ if (typeof jQuery === 'undefined') {
 }(jQuery);
 
 /* ========================================================================
- * Bootstrap: button.js v3.3.5
+ * Bootstrap: button.js v3.3.4
  * http://getbootstrap.com/javascript/#buttons
  * ========================================================================
  * Copyright 2011-2015 Twitter, Inc.
@@ -35854,7 +35712,7 @@ if (typeof jQuery === 'undefined') {
     this.isLoading = false
   }
 
-  Button.VERSION  = '3.3.5'
+  Button.VERSION  = '3.3.4'
 
   Button.DEFAULTS = {
     loadingText: 'loading...'
@@ -35866,7 +35724,7 @@ if (typeof jQuery === 'undefined') {
     var val  = $el.is('input') ? 'val' : 'html'
     var data = $el.data()
 
-    state += 'Text'
+    state = state + 'Text'
 
     if (data.resetText == null) $el.data('resetText', $el[val]())
 
@@ -35891,19 +35749,15 @@ if (typeof jQuery === 'undefined') {
     if ($parent.length) {
       var $input = this.$element.find('input')
       if ($input.prop('type') == 'radio') {
-        if ($input.prop('checked')) changed = false
-        $parent.find('.active').removeClass('active')
-        this.$element.addClass('active')
-      } else if ($input.prop('type') == 'checkbox') {
-        if (($input.prop('checked')) !== this.$element.hasClass('active')) changed = false
-        this.$element.toggleClass('active')
+        if ($input.prop('checked') && this.$element.hasClass('active')) changed = false
+        else $parent.find('.active').removeClass('active')
       }
-      $input.prop('checked', this.$element.hasClass('active'))
-      if (changed) $input.trigger('change')
+      if (changed) $input.prop('checked', !this.$element.hasClass('active')).trigger('change')
     } else {
       this.$element.attr('aria-pressed', !this.$element.hasClass('active'))
-      this.$element.toggleClass('active')
     }
+
+    if (changed) this.$element.toggleClass('active')
   }
 
 
@@ -35946,7 +35800,7 @@ if (typeof jQuery === 'undefined') {
       var $btn = $(e.target)
       if (!$btn.hasClass('btn')) $btn = $btn.closest('.btn')
       Plugin.call($btn, 'toggle')
-      if (!($(e.target).is('input[type="radio"]') || $(e.target).is('input[type="checkbox"]'))) e.preventDefault()
+      e.preventDefault()
     })
     .on('focus.bs.button.data-api blur.bs.button.data-api', '[data-toggle^="button"]', function (e) {
       $(e.target).closest('.btn').toggleClass('focus', /^focus(in)?$/.test(e.type))
@@ -35955,7 +35809,7 @@ if (typeof jQuery === 'undefined') {
 }(jQuery);
 
 /* ========================================================================
- * Bootstrap: carousel.js v3.3.5
+ * Bootstrap: carousel.js v3.3.4
  * http://getbootstrap.com/javascript/#carousel
  * ========================================================================
  * Copyright 2011-2015 Twitter, Inc.
@@ -35986,7 +35840,7 @@ if (typeof jQuery === 'undefined') {
       .on('mouseleave.bs.carousel', $.proxy(this.cycle, this))
   }
 
-  Carousel.VERSION  = '3.3.5'
+  Carousel.VERSION  = '3.3.4'
 
   Carousel.TRANSITION_DURATION = 600
 
@@ -36193,7 +36047,7 @@ if (typeof jQuery === 'undefined') {
 }(jQuery);
 
 /* ========================================================================
- * Bootstrap: collapse.js v3.3.5
+ * Bootstrap: collapse.js v3.3.4
  * http://getbootstrap.com/javascript/#collapse
  * ========================================================================
  * Copyright 2011-2015 Twitter, Inc.
@@ -36223,7 +36077,7 @@ if (typeof jQuery === 'undefined') {
     if (this.options.toggle) this.toggle()
   }
 
-  Collapse.VERSION  = '3.3.5'
+  Collapse.VERSION  = '3.3.4'
 
   Collapse.TRANSITION_DURATION = 350
 
@@ -36405,7 +36259,7 @@ if (typeof jQuery === 'undefined') {
 }(jQuery);
 
 /* ========================================================================
- * Bootstrap: dropdown.js v3.3.5
+ * Bootstrap: dropdown.js v3.3.4
  * http://getbootstrap.com/javascript/#dropdowns
  * ========================================================================
  * Copyright 2011-2015 Twitter, Inc.
@@ -36425,41 +36279,7 @@ if (typeof jQuery === 'undefined') {
     $(element).on('click.bs.dropdown', this.toggle)
   }
 
-  Dropdown.VERSION = '3.3.5'
-
-  function getParent($this) {
-    var selector = $this.attr('data-target')
-
-    if (!selector) {
-      selector = $this.attr('href')
-      selector = selector && /#[A-Za-z]/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
-    }
-
-    var $parent = selector && $(selector)
-
-    return $parent && $parent.length ? $parent : $this.parent()
-  }
-
-  function clearMenus(e) {
-    if (e && e.which === 3) return
-    $(backdrop).remove()
-    $(toggle).each(function () {
-      var $this         = $(this)
-      var $parent       = getParent($this)
-      var relatedTarget = { relatedTarget: this }
-
-      if (!$parent.hasClass('open')) return
-
-      if (e && e.type == 'click' && /input|textarea/i.test(e.target.tagName) && $.contains($parent[0], e.target)) return
-
-      $parent.trigger(e = $.Event('hide.bs.dropdown', relatedTarget))
-
-      if (e.isDefaultPrevented()) return
-
-      $this.attr('aria-expanded', 'false')
-      $parent.removeClass('open').trigger('hidden.bs.dropdown', relatedTarget)
-    })
-  }
+  Dropdown.VERSION = '3.3.4'
 
   Dropdown.prototype.toggle = function (e) {
     var $this = $(this)
@@ -36474,10 +36294,7 @@ if (typeof jQuery === 'undefined') {
     if (!isActive) {
       if ('ontouchstart' in document.documentElement && !$parent.closest('.navbar-nav').length) {
         // if mobile we use a backdrop because click events don't delegate
-        $(document.createElement('div'))
-          .addClass('dropdown-backdrop')
-          .insertAfter($(this))
-          .on('click', clearMenus)
+        $('<div class="dropdown-backdrop"/>').insertAfter($(this)).on('click', clearMenus)
       }
 
       var relatedTarget = { relatedTarget: this }
@@ -36510,23 +36327,55 @@ if (typeof jQuery === 'undefined') {
     var $parent  = getParent($this)
     var isActive = $parent.hasClass('open')
 
-    if (!isActive && e.which != 27 || isActive && e.which == 27) {
+    if ((!isActive && e.which != 27) || (isActive && e.which == 27)) {
       if (e.which == 27) $parent.find(toggle).trigger('focus')
       return $this.trigger('click')
     }
 
     var desc = ' li:not(.disabled):visible a'
-    var $items = $parent.find('.dropdown-menu' + desc)
+    var $items = $parent.find('[role="menu"]' + desc + ', [role="listbox"]' + desc)
 
     if (!$items.length) return
 
     var index = $items.index(e.target)
 
-    if (e.which == 38 && index > 0)                 index--         // up
-    if (e.which == 40 && index < $items.length - 1) index++         // down
-    if (!~index)                                    index = 0
+    if (e.which == 38 && index > 0)                 index--                        // up
+    if (e.which == 40 && index < $items.length - 1) index++                        // down
+    if (!~index)                                      index = 0
 
     $items.eq(index).trigger('focus')
+  }
+
+  function clearMenus(e) {
+    if (e && e.which === 3) return
+    $(backdrop).remove()
+    $(toggle).each(function () {
+      var $this         = $(this)
+      var $parent       = getParent($this)
+      var relatedTarget = { relatedTarget: this }
+
+      if (!$parent.hasClass('open')) return
+
+      $parent.trigger(e = $.Event('hide.bs.dropdown', relatedTarget))
+
+      if (e.isDefaultPrevented()) return
+
+      $this.attr('aria-expanded', 'false')
+      $parent.removeClass('open').trigger('hidden.bs.dropdown', relatedTarget)
+    })
+  }
+
+  function getParent($this) {
+    var selector = $this.attr('data-target')
+
+    if (!selector) {
+      selector = $this.attr('href')
+      selector = selector && /#[A-Za-z]/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
+    }
+
+    var $parent = selector && $(selector)
+
+    return $parent && $parent.length ? $parent : $this.parent()
   }
 
 
@@ -36566,12 +36415,13 @@ if (typeof jQuery === 'undefined') {
     .on('click.bs.dropdown.data-api', '.dropdown form', function (e) { e.stopPropagation() })
     .on('click.bs.dropdown.data-api', toggle, Dropdown.prototype.toggle)
     .on('keydown.bs.dropdown.data-api', toggle, Dropdown.prototype.keydown)
-    .on('keydown.bs.dropdown.data-api', '.dropdown-menu', Dropdown.prototype.keydown)
+    .on('keydown.bs.dropdown.data-api', '[role="menu"]', Dropdown.prototype.keydown)
+    .on('keydown.bs.dropdown.data-api', '[role="listbox"]', Dropdown.prototype.keydown)
 
 }(jQuery);
 
 /* ========================================================================
- * Bootstrap: modal.js v3.3.5
+ * Bootstrap: modal.js v3.3.4
  * http://getbootstrap.com/javascript/#modals
  * ========================================================================
  * Copyright 2011-2015 Twitter, Inc.
@@ -36605,7 +36455,7 @@ if (typeof jQuery === 'undefined') {
     }
   }
 
-  Modal.VERSION  = '3.3.5'
+  Modal.VERSION  = '3.3.4'
 
   Modal.TRANSITION_DURATION = 300
   Modal.BACKDROP_TRANSITION_DURATION = 150
@@ -36662,7 +36512,9 @@ if (typeof jQuery === 'undefined') {
         that.$element[0].offsetWidth // force reflow
       }
 
-      that.$element.addClass('in')
+      that.$element
+        .addClass('in')
+        .attr('aria-hidden', false)
 
       that.enforceFocus()
 
@@ -36696,6 +36548,7 @@ if (typeof jQuery === 'undefined') {
 
     this.$element
       .removeClass('in')
+      .attr('aria-hidden', true)
       .off('click.dismiss.bs.modal')
       .off('mouseup.dismiss.bs.modal')
 
@@ -36759,8 +36612,7 @@ if (typeof jQuery === 'undefined') {
     if (this.isShown && this.options.backdrop) {
       var doAnimate = $.support.transition && animate
 
-      this.$backdrop = $(document.createElement('div'))
-        .addClass('modal-backdrop ' + animate)
+      this.$backdrop = $('<div class="modal-backdrop ' + animate + '" />')
         .appendTo(this.$body)
 
       this.$element.on('click.dismiss.bs.modal', $.proxy(function (e) {
@@ -36909,7 +36761,7 @@ if (typeof jQuery === 'undefined') {
 }(jQuery);
 
 /* ========================================================================
- * Bootstrap: tooltip.js v3.3.5
+ * Bootstrap: tooltip.js v3.3.4
  * http://getbootstrap.com/javascript/#tooltip
  * Inspired by the original jQuery.tipsy by Jason Frame
  * ========================================================================
@@ -36931,12 +36783,11 @@ if (typeof jQuery === 'undefined') {
     this.timeout    = null
     this.hoverState = null
     this.$element   = null
-    this.inState    = null
 
     this.init('tooltip', element, options)
   }
 
-  Tooltip.VERSION  = '3.3.5'
+  Tooltip.VERSION  = '3.3.4'
 
   Tooltip.TRANSITION_DURATION = 150
 
@@ -36961,8 +36812,7 @@ if (typeof jQuery === 'undefined') {
     this.type      = type
     this.$element  = $(element)
     this.options   = this.getOptions(options)
-    this.$viewport = this.options.viewport && $($.isFunction(this.options.viewport) ? this.options.viewport.call(this, this.$element) : (this.options.viewport.selector || this.options.viewport))
-    this.inState   = { click: false, hover: false, focus: false }
+    this.$viewport = this.options.viewport && $(this.options.viewport.selector || this.options.viewport)
 
     if (this.$element[0] instanceof document.constructor && !this.options.selector) {
       throw new Error('`selector` option must be specified when initializing ' + this.type + ' on the window.document object!')
@@ -37021,18 +36871,14 @@ if (typeof jQuery === 'undefined') {
     var self = obj instanceof this.constructor ?
       obj : $(obj.currentTarget).data('bs.' + this.type)
 
+    if (self && self.$tip && self.$tip.is(':visible')) {
+      self.hoverState = 'in'
+      return
+    }
+
     if (!self) {
       self = new this.constructor(obj.currentTarget, this.getDelegateOptions())
       $(obj.currentTarget).data('bs.' + this.type, self)
-    }
-
-    if (obj instanceof $.Event) {
-      self.inState[obj.type == 'focusin' ? 'focus' : 'hover'] = true
-    }
-
-    if (self.tip().hasClass('in') || self.hoverState == 'in') {
-      self.hoverState = 'in'
-      return
     }
 
     clearTimeout(self.timeout)
@@ -37046,14 +36892,6 @@ if (typeof jQuery === 'undefined') {
     }, self.options.delay.show)
   }
 
-  Tooltip.prototype.isInStateTrue = function () {
-    for (var key in this.inState) {
-      if (this.inState[key]) return true
-    }
-
-    return false
-  }
-
   Tooltip.prototype.leave = function (obj) {
     var self = obj instanceof this.constructor ?
       obj : $(obj.currentTarget).data('bs.' + this.type)
@@ -37062,12 +36900,6 @@ if (typeof jQuery === 'undefined') {
       self = new this.constructor(obj.currentTarget, this.getDelegateOptions())
       $(obj.currentTarget).data('bs.' + this.type, self)
     }
-
-    if (obj instanceof $.Event) {
-      self.inState[obj.type == 'focusout' ? 'focus' : 'hover'] = false
-    }
-
-    if (self.isInStateTrue()) return
 
     clearTimeout(self.timeout)
 
@@ -37115,7 +36947,6 @@ if (typeof jQuery === 'undefined') {
         .data('bs.' + this.type, this)
 
       this.options.container ? $tip.appendTo(this.options.container) : $tip.insertAfter(this.$element)
-      this.$element.trigger('inserted.bs.' + this.type)
 
       var pos          = this.getPosition()
       var actualWidth  = $tip[0].offsetWidth
@@ -37123,12 +36954,13 @@ if (typeof jQuery === 'undefined') {
 
       if (autoPlace) {
         var orgPlacement = placement
-        var viewportDim = this.getPosition(this.$viewport)
+        var $container   = this.options.container ? $(this.options.container) : this.$element.parent()
+        var containerDim = this.getPosition($container)
 
-        placement = placement == 'bottom' && pos.bottom + actualHeight > viewportDim.bottom ? 'top'    :
-                    placement == 'top'    && pos.top    - actualHeight < viewportDim.top    ? 'bottom' :
-                    placement == 'right'  && pos.right  + actualWidth  > viewportDim.width  ? 'left'   :
-                    placement == 'left'   && pos.left   - actualWidth  < viewportDim.left   ? 'right'  :
+        placement = placement == 'bottom' && pos.bottom + actualHeight > containerDim.bottom ? 'top'    :
+                    placement == 'top'    && pos.top    - actualHeight < containerDim.top    ? 'bottom' :
+                    placement == 'right'  && pos.right  + actualWidth  > containerDim.width  ? 'left'   :
+                    placement == 'left'   && pos.left   - actualWidth  < containerDim.left   ? 'right'  :
                     placement
 
         $tip
@@ -37169,8 +37001,8 @@ if (typeof jQuery === 'undefined') {
     if (isNaN(marginTop))  marginTop  = 0
     if (isNaN(marginLeft)) marginLeft = 0
 
-    offset.top  += marginTop
-    offset.left += marginLeft
+    offset.top  = offset.top  + marginTop
+    offset.left = offset.left + marginLeft
 
     // $.fn.offset doesn't round pixel values
     // so we use setOffset directly with our own function B-0
@@ -37252,7 +37084,7 @@ if (typeof jQuery === 'undefined') {
 
   Tooltip.prototype.fixTitle = function () {
     var $e = this.$element
-    if ($e.attr('title') || typeof $e.attr('data-original-title') != 'string') {
+    if ($e.attr('title') || typeof ($e.attr('data-original-title')) != 'string') {
       $e.attr('data-original-title', $e.attr('title') || '').attr('title', '')
     }
   }
@@ -37307,7 +37139,7 @@ if (typeof jQuery === 'undefined') {
       var rightEdgeOffset = pos.left + viewportPadding + actualWidth
       if (leftEdgeOffset < viewportDimensions.left) { // left overflow
         delta.left = viewportDimensions.left - leftEdgeOffset
-      } else if (rightEdgeOffset > viewportDimensions.right) { // right overflow
+      } else if (rightEdgeOffset > viewportDimensions.width) { // right overflow
         delta.left = viewportDimensions.left + viewportDimensions.width - rightEdgeOffset
       }
     }
@@ -37333,13 +37165,7 @@ if (typeof jQuery === 'undefined') {
   }
 
   Tooltip.prototype.tip = function () {
-    if (!this.$tip) {
-      this.$tip = $(this.options.template)
-      if (this.$tip.length != 1) {
-        throw new Error(this.type + ' `template` option must consist of exactly 1 top-level element!')
-      }
-    }
-    return this.$tip
+    return (this.$tip = this.$tip || $(this.options.template))
   }
 
   Tooltip.prototype.arrow = function () {
@@ -37368,13 +37194,7 @@ if (typeof jQuery === 'undefined') {
       }
     }
 
-    if (e) {
-      self.inState.click = !self.inState.click
-      if (self.isInStateTrue()) self.enter(self)
-      else self.leave(self)
-    } else {
-      self.tip().hasClass('in') ? self.leave(self) : self.enter(self)
-    }
+    self.tip().hasClass('in') ? self.leave(self) : self.enter(self)
   }
 
   Tooltip.prototype.destroy = function () {
@@ -37382,12 +37202,6 @@ if (typeof jQuery === 'undefined') {
     clearTimeout(this.timeout)
     this.hide(function () {
       that.$element.off('.' + that.type).removeData('bs.' + that.type)
-      if (that.$tip) {
-        that.$tip.detach()
-      }
-      that.$tip = null
-      that.$arrow = null
-      that.$viewport = null
     })
   }
 
@@ -37424,7 +37238,7 @@ if (typeof jQuery === 'undefined') {
 }(jQuery);
 
 /* ========================================================================
- * Bootstrap: popover.js v3.3.5
+ * Bootstrap: popover.js v3.3.4
  * http://getbootstrap.com/javascript/#popovers
  * ========================================================================
  * Copyright 2011-2015 Twitter, Inc.
@@ -37444,7 +37258,7 @@ if (typeof jQuery === 'undefined') {
 
   if (!$.fn.tooltip) throw new Error('Popover requires tooltip.js')
 
-  Popover.VERSION  = '3.3.5'
+  Popover.VERSION  = '3.3.4'
 
   Popover.DEFAULTS = $.extend({}, $.fn.tooltip.Constructor.DEFAULTS, {
     placement: 'right',
@@ -37533,7 +37347,7 @@ if (typeof jQuery === 'undefined') {
 }(jQuery);
 
 /* ========================================================================
- * Bootstrap: scrollspy.js v3.3.5
+ * Bootstrap: scrollspy.js v3.3.4
  * http://getbootstrap.com/javascript/#scrollspy
  * ========================================================================
  * Copyright 2011-2015 Twitter, Inc.
@@ -37562,7 +37376,7 @@ if (typeof jQuery === 'undefined') {
     this.process()
   }
 
-  ScrollSpy.VERSION  = '3.3.5'
+  ScrollSpy.VERSION  = '3.3.4'
 
   ScrollSpy.DEFAULTS = {
     offset: 10
@@ -37706,7 +37520,7 @@ if (typeof jQuery === 'undefined') {
 }(jQuery);
 
 /* ========================================================================
- * Bootstrap: tab.js v3.3.5
+ * Bootstrap: tab.js v3.3.4
  * http://getbootstrap.com/javascript/#tabs
  * ========================================================================
  * Copyright 2011-2015 Twitter, Inc.
@@ -37721,12 +37535,10 @@ if (typeof jQuery === 'undefined') {
   // ====================
 
   var Tab = function (element) {
-    // jscs:disable requireDollarBeforejQueryAssignment
     this.element = $(element)
-    // jscs:enable requireDollarBeforejQueryAssignment
   }
 
-  Tab.VERSION = '3.3.5'
+  Tab.VERSION = '3.3.4'
 
   Tab.TRANSITION_DURATION = 150
 
@@ -37774,7 +37586,7 @@ if (typeof jQuery === 'undefined') {
     var $active    = container.find('> .active')
     var transition = callback
       && $.support.transition
-      && ($active.length && $active.hasClass('fade') || !!container.find('> .fade').length)
+      && (($active.length && $active.hasClass('fade')) || !!container.find('> .fade').length)
 
     function next() {
       $active
@@ -37862,7 +37674,7 @@ if (typeof jQuery === 'undefined') {
 }(jQuery);
 
 /* ========================================================================
- * Bootstrap: affix.js v3.3.5
+ * Bootstrap: affix.js v3.3.4
  * http://getbootstrap.com/javascript/#affix
  * ========================================================================
  * Copyright 2011-2015 Twitter, Inc.
@@ -37891,7 +37703,7 @@ if (typeof jQuery === 'undefined') {
     this.checkPosition()
   }
 
-  Affix.VERSION  = '3.3.5'
+  Affix.VERSION  = '3.3.4'
 
   Affix.RESET    = 'affix affix-top affix-bottom'
 
@@ -37941,7 +37753,7 @@ if (typeof jQuery === 'undefined') {
     var offset       = this.options.offset
     var offsetTop    = offset.top
     var offsetBottom = offset.bottom
-    var scrollHeight = Math.max($(document).height(), $(document.body).height())
+    var scrollHeight = $(document.body).height()
 
     if (typeof offset != 'object')         offsetBottom = offsetTop = offset
     if (typeof offsetTop == 'function')    offsetTop    = offset.top(this.$element)
@@ -46606,30 +46418,25 @@ angular.module("template/typeahead/typeahead-popup.html", []).run(["$templateCac
     "");
 }]);
 
-(function (root, factory) {
-  'use strict';
-
-  if (typeof define === 'function' && define.amd) {
-    define(['angular'], factory);
-  } else if (typeof exports === 'object') {
-    module.exports = factory(require('angular'));
-  } else {
-    // Browser globals (root is window), we don't register it.
-    factory(root.angular);
-  }
-}(this , function (angular) {
+(function(angular, factory) {
     'use strict';
+    if (typeof define === 'function' && define.amd) {
+        define('ngStorage', ['angular'], function(angular) {
+            return factory(angular);
+        });
+    } else {
+        return factory(angular);
+    }
+}(typeof angular === 'undefined' ? null : angular, function(angular) {
 
-    // RequireJS does not pass in Angular to us (will be undefined).
-    // Fallback to window which should mostly be there.
-    angular = (angular && angular.module ) ? angular : window.angular;
+    'use strict';
 
     /**
      * @ngdoc overview
      * @name ngStorage
      */
 
-    return angular.module('ngStorage', [])
+    angular.module('ngStorage', [])
 
     /**
      * @ngdoc object
@@ -46638,7 +46445,7 @@ angular.module("template/typeahead/typeahead-popup.html", []).run(["$templateCac
      * @requires $window
      */
 
-    .provider('$localStorage', _storageProvider('localStorage'))
+    .factory('$localStorage', _storageFactory('localStorage'))
 
     /**
      * @ngdoc object
@@ -46647,75 +46454,23 @@ angular.module("template/typeahead/typeahead-popup.html", []).run(["$templateCac
      * @requires $window
      */
 
-    .provider('$sessionStorage', _storageProvider('sessionStorage'));
+    .factory('$sessionStorage', _storageFactory('sessionStorage'));
 
-    function _storageProvider(storageType) {
-        return function () {
-          var storageKeyPrefix = 'ngStorage-';
+    function _storageFactory(storageType) {
+        return [
+            '$rootScope',
+            '$window',
+            '$log',
+            '$timeout',
 
-          this.setKeyPrefix = function (prefix) {
-            if (typeof prefix !== 'string') {
-              throw new TypeError('[ngStorage] - ' + storageType + 'Provider.setKeyPrefix() expects a String.');
-            }
-            storageKeyPrefix = prefix;
-          };
-
-          var serializer = angular.toJson;
-          var deserializer = angular.fromJson;
-
-          this.setSerializer = function (s) {
-            if (typeof s !== 'function') {
-              throw new TypeError('[ngStorage] - ' + storageType + 'Provider.setSerializer expects a function.');
-            }
-
-            serializer = s;
-          };
-
-          this.setDeserializer = function (d) {
-            if (typeof d !== 'function') {
-              throw new TypeError('[ngStorage] - ' + storageType + 'Provider.setDeserializer expects a function.');
-            }
-
-            deserializer = d;
-          };
-
-          // Note: This is not very elegant at all.
-          this.get = function (key) {
-            return deserializer(window[storageType].getItem(storageKeyPrefix + key));
-          };
-
-          // Note: This is not very elegant at all.
-          this.set = function (key, value) {
-            return window[storageType].setItem(storageKeyPrefix + key, serializer(value));
-          };
-
-          this.$get = [
-              '$rootScope',
-              '$window',
-              '$log',
-              '$timeout',
-
-              function(
-                  $rootScope,
-                  $window,
-                  $log,
-                  $timeout
-              ){
+            function(
+                $rootScope,
+                $window,
+                $log,
+                $timeout
+            ){
                 function isStorageSupported(storageType) {
-
-                    // Some installations of IE, for an unknown reason, throw "SCRIPT5: Error: Access is denied"
-                    // when accessing window.localStorage. This happens before you try to do anything with it. Catch
-                    // that error and allow execution to continue.
-
-                    // fix 'SecurityError: DOM Exception 18' exception in Desktop Safari, Mobile Safari
-                    // when "Block cookies": "Always block" is turned on
-                    var supported;
-                    try {
-                        supported = $window[storageType];
-                    }
-                    catch (err) {
-                        supported = false;
-                    }
+                    var supported = $window[storageType];
 
                     // When Safari (OS X or iOS) is in private browsing mode, it appears as though localStorage
                     // is available, but trying to call .setItem throws an exception below:
@@ -46735,71 +46490,68 @@ angular.module("template/typeahead/typeahead-popup.html", []).run(["$templateCac
                     return supported;
                 }
 
-                // The magic number 10 is used which only works for some keyPrefixes...
-                // See https://github.com/gsklee/ngStorage/issues/137
-                var prefixLength = storageKeyPrefix.length;
-
                 // #9: Assign a placeholder object if Web Storage is unavailable to prevent breaking the entire AngularJS app
-                var webStorage = isStorageSupported(storageType) || ($log.warn('This browser does not support Web Storage!'), {setItem: angular.noop, getItem: angular.noop}),
+                var webStorage = isStorageSupported(storageType) || ($log.warn('This browser does not support Web Storage!'), {setItem: function() {}, getItem: function() {}}),
                     $storage = {
                         $default: function(items) {
                             for (var k in items) {
                                 angular.isDefined($storage[k]) || ($storage[k] = items[k]);
                             }
 
-                            $storage.$sync();
                             return $storage;
                         },
                         $reset: function(items) {
                             for (var k in $storage) {
-                                '$' === k[0] || (delete $storage[k] && webStorage.removeItem(storageKeyPrefix + k));
+                                '$' === k[0] || delete $storage[k];
                             }
 
                             return $storage.$default(items);
-                        },
-                        $sync: function () {
-                            for (var i = 0, l = webStorage.length, k; i < l; i++) {
-                                // #8, #10: `webStorage.key(i)` may be an empty string (or throw an exception in IE9 if `webStorage` is empty)
-                                (k = webStorage.key(i)) && storageKeyPrefix === k.slice(0, prefixLength) && ($storage[k.slice(prefixLength)] = deserializer(webStorage.getItem(k)));
-                            }
-                        },
-                        $apply: function() {
-                            var temp$storage;
-
-                            _debounce = null;
-
-                            if (!angular.equals($storage, _last$storage)) {
-                                temp$storage = angular.copy(_last$storage);
-                                angular.forEach($storage, function(v, k) {
-                                    if (angular.isDefined(v) && '$' !== k[0]) {
-                                        webStorage.setItem(storageKeyPrefix + k, serializer(v))
-                                        delete temp$storage[k];
-                                    }
-                                });
-
-                                for (var k in temp$storage) {
-                                    webStorage.removeItem(storageKeyPrefix + k);
-                                }
-
-                                _last$storage = angular.copy($storage);
-                            }
-                        },
+                        }
                     },
                     _last$storage,
                     _debounce;
 
-                $storage.$sync();
+                try {
+                    webStorage = $window[storageType];
+                    webStorage.length;
+                } catch(e) {
+                    $log.warn('This browser does not support Web Storage!');
+                    webStorage = {};
+                }
+
+                for (var i = 0, l = webStorage.length, k; i < l; i++) {
+                    // #8, #10: `webStorage.key(i)` may be an empty string (or throw an exception in IE9 if `webStorage` is empty)
+                    (k = webStorage.key(i)) && 'ngStorage-' === k.slice(0, 10) && ($storage[k.slice(10)] = angular.fromJson(webStorage.getItem(k)));
+                }
 
                 _last$storage = angular.copy($storage);
 
                 $rootScope.$watch(function() {
-                    _debounce || (_debounce = $timeout($storage.$apply, 100, false));
+                    var temp$storage;
+                    _debounce || (_debounce = $timeout(function() {
+                        _debounce = null;
+
+                        if (!angular.equals($storage, _last$storage)) {
+                            temp$storage = angular.copy(_last$storage);
+                            angular.forEach($storage, function(v, k) {
+                                angular.isDefined(v) && '$' !== k[0] && webStorage.setItem('ngStorage-' + k, angular.toJson(v));
+
+                                delete temp$storage[k];
+                            });
+
+                            for (var k in temp$storage) {
+                                webStorage.removeItem('ngStorage-' + k);
+                            }
+
+                            _last$storage = angular.copy($storage);
+                        }
+                    }, 100, false));
                 });
 
                 // #6: Use `$window.addEventListener` instead of `angular.element` to avoid the jQuery-specific `event.originalEvent`
-                $window.addEventListener && $window.addEventListener('storage', function(event) {
-                    if (storageKeyPrefix === event.key.slice(0, prefixLength)) {
-                        event.newValue ? $storage[event.key.slice(prefixLength)] = deserializer(event.newValue) : delete $storage[event.key.slice(prefixLength)];
+                'localStorage' === storageType && $window.addEventListener && $window.addEventListener('storage', function(event) {
+                    if ('ngStorage-' === event.key.slice(0, 10)) {
+                        event.newValue ? $storage[event.key.slice(10)] = angular.fromJson(event.newValue) : delete $storage[event.key.slice(10)];
 
                         _last$storage = angular.copy($storage);
 
@@ -46807,24 +46559,2252 @@ angular.module("template/typeahead/typeahead-popup.html", []).run(["$templateCac
                     }
                 });
 
-                $window.addEventListener && $window.addEventListener('beforeunload', function() {
-                    $storage.$apply();
-                });
-
                 return $storage;
             }
         ];
-      };
     }
 
 }));
 
 /**
  * Bunch of useful filters for angularJS(with no external dependencies!)
- * @version v0.5.7 - 2015-10-04 * @link https://github.com/a8m/angular-filter
+ * @version v0.5.4 - 2015-02-20 * @link https://github.com/a8m/angular-filter
  * @author Ariel Mashraki <ariel@mashraki.co.il>
  * @license MIT License, http://www.opensource.org/licenses/MIT
- */!function(a,b,c){"use strict";function d(a){return D(a)?a:Object.keys(a).map(function(b){return a[b]})}function e(a){return null===a}function f(a,b){var d=Object.keys(a);return-1==d.map(function(d){return b[d]!==c&&b[d]==a[d]}).indexOf(!1)}function g(a,b){if(""===b)return a;var c=a.indexOf(b.charAt(0));return-1===c?!1:g(a.substr(c+1),b.substr(1))}function h(a,b,c){var d=0;return a.filter(function(a){var e=x(c)?b>d&&c(a):b>d;return d=e?d+1:d,e})}function i(a,b,c){return c.round(a*c.pow(10,b))/c.pow(10,b)}function j(a,b,c){b=b||[];var d=Object.keys(a);return d.forEach(function(d){if(C(a[d])&&!D(a[d])){var e=c?c+"."+d:c;j(a[d],b,e||d)}else{var f=c?c+"."+d:d;b.push(f)}}),b}function k(a){return a&&a.$evalAsync&&a.$watch}function l(){return function(a,b){return a>b}}function m(){return function(a,b){return a>=b}}function n(){return function(a,b){return b>a}}function o(){return function(a,b){return b>=a}}function p(){return function(a,b){return a==b}}function q(){return function(a,b){return a!=b}}function r(){return function(a,b){return a===b}}function s(){return function(a,b){return a!==b}}function t(a){return function(b,c){return b=C(b)?d(b):b,!D(b)||y(c)?!1:b.some(function(b){return C(b)||z(c)?a(c)(b):b===c})}}function u(a,b){return b=b||0,b>=a.length?a:D(a[b])?u(a.slice(0,b).concat(a[b],a.slice(b+1)),b):u(a,b+1)}function v(a){return function(b,c){function e(a,b){return y(b)?!1:a.some(function(a){return H(a,b)})}if(b=C(b)?d(b):b,!D(b))return b;var f=[],g=a(c);return y(c)?b.filter(function(a,b,c){return c.indexOf(a)===b}):b.filter(function(a){var b=g(a);return e(f,b)?!1:(f.push(b),!0)})}}function w(a,b,c){return b?a+c+w(a,--b,c):a}var x=b.isDefined,y=b.isUndefined,z=b.isFunction,A=b.isString,B=b.isNumber,C=b.isObject,D=b.isArray,E=b.forEach,F=b.extend,G=b.copy,H=b.equals;String.prototype.contains||(String.prototype.contains=function(){return-1!==String.prototype.indexOf.apply(this,arguments)}),b.module("a8m.angular",[]).filter("isUndefined",function(){return function(a){return b.isUndefined(a)}}).filter("isDefined",function(){return function(a){return b.isDefined(a)}}).filter("isFunction",function(){return function(a){return b.isFunction(a)}}).filter("isString",function(){return function(a){return b.isString(a)}}).filter("isNumber",function(){return function(a){return b.isNumber(a)}}).filter("isArray",function(){return function(a){return b.isArray(a)}}).filter("isObject",function(){return function(a){return b.isObject(a)}}).filter("isEqual",function(){return function(a,c){return b.equals(a,c)}}),b.module("a8m.conditions",[]).filter({isGreaterThan:l,">":l,isGreaterThanOrEqualTo:m,">=":m,isLessThan:n,"<":n,isLessThanOrEqualTo:o,"<=":o,isEqualTo:p,"==":p,isNotEqualTo:q,"!=":q,isIdenticalTo:r,"===":r,isNotIdenticalTo:s,"!==":s}),b.module("a8m.is-null",[]).filter("isNull",function(){return function(a){return e(a)}}),b.module("a8m.after-where",[]).filter("afterWhere",function(){return function(a,b){if(a=C(a)?d(a):a,!D(a)||y(b))return a;var c=a.map(function(a){return f(b,a)}).indexOf(!0);return a.slice(-1===c?0:c)}}),b.module("a8m.after",[]).filter("after",function(){return function(a,b){return a=C(a)?d(a):a,D(a)?a.slice(b):a}}),b.module("a8m.before-where",[]).filter("beforeWhere",function(){return function(a,b){if(a=C(a)?d(a):a,!D(a)||y(b))return a;var c=a.map(function(a){return f(b,a)}).indexOf(!0);return a.slice(0,-1===c?a.length:++c)}}),b.module("a8m.before",[]).filter("before",function(){return function(a,b){return a=C(a)?d(a):a,D(a)?a.slice(0,b?--b:b):a}}),b.module("a8m.chunk-by",["a8m.filter-watcher"]).filter("chunkBy",["filterWatcher",function(a){return function(b,c,d){function e(a,b){for(var c=[];a--;)c[a]=b;return c}function f(a,b,c){return D(a)?a.map(function(a,d,f){return d*=b,a=f.slice(d,d+b),!y(c)&&a.length<b?a.concat(e(b-a.length,c)):a}).slice(0,Math.ceil(a.length/b)):a}return a.isMemoized("chunkBy",arguments)||a.memoize("chunkBy",arguments,this,f(b,c,d))}}]),b.module("a8m.concat",[]).filter("concat",[function(){return function(a,b){if(y(b))return a;if(D(a))return C(b)?a.concat(d(b)):a.concat(b);if(C(a)){var c=d(a);return C(b)?c.concat(d(b)):c.concat(b)}return a}}]),b.module("a8m.contains",[]).filter({contains:["$parse",t],some:["$parse",t]}),b.module("a8m.count-by",[]).filter("countBy",["$parse",function(a){return function(b,c){var e,f={},g=a(c);return b=C(b)?d(b):b,!D(b)||y(c)?b:(b.forEach(function(a){e=g(a),f[e]||(f[e]=0),f[e]++}),f)}}]),b.module("a8m.defaults",[]).filter("defaults",["$parse",function(a){return function(b,c){if(b=C(b)?d(b):b,!D(b)||!C(c))return b;var e=j(c);return b.forEach(function(b){e.forEach(function(d){var e=a(d),f=e.assign;y(e(b))&&f(b,e(c))})}),b}}]),b.module("a8m.every",[]).filter("every",["$parse",function(a){return function(b,c){return b=C(b)?d(b):b,!D(b)||y(c)?!0:b.every(function(b){return C(b)||z(c)?a(c)(b):b===c})}}]),b.module("a8m.filter-by",[]).filter("filterBy",["$parse",function(a){return function(b,e,f){var g;return f=A(f)||B(f)?String(f).toLowerCase():c,b=C(b)?d(b):b,!D(b)||y(f)?b:b.filter(function(b){return e.some(function(c){if(~c.indexOf("+")){var d=c.replace(new RegExp("\\s","g"),"").split("+");g=d.reduce(function(c,d,e){return 1===e?a(c)(b)+" "+a(d)(b):c+" "+a(d)(b)})}else g=a(c)(b);return A(g)||B(g)?String(g).toLowerCase().contains(f):!1})})}}]),b.module("a8m.first",[]).filter("first",["$parse",function(a){return function(b){var e,f,g;return b=C(b)?d(b):b,D(b)?(g=Array.prototype.slice.call(arguments,1),e=B(g[0])?g[0]:1,f=B(g[0])?B(g[1])?c:g[1]:g[0],g.length?h(b,e,f?a(f):f):b[0]):b}}]),b.module("a8m.flatten",[]).filter("flatten",function(){return function(a,b){return b=b||!1,a=C(a)?d(a):a,D(a)?b?[].concat.apply([],a):u(a,0):a}}),b.module("a8m.fuzzy-by",[]).filter("fuzzyBy",["$parse",function(a){return function(b,c,e,f){var h,i,j=f||!1;return b=C(b)?d(b):b,!D(b)||y(c)||y(e)?b:(i=a(c),b.filter(function(a){return h=i(a),A(h)?(h=j?h:h.toLowerCase(),e=j?e:e.toLowerCase(),g(h,e)!==!1):!1}))}}]),b.module("a8m.fuzzy",[]).filter("fuzzy",function(){return function(a,b,c){function e(a,b){var c,d,e=Object.keys(a);return 0<e.filter(function(e){return c=a[e],d?!0:A(c)?(c=f?c:c.toLowerCase(),d=g(c,b)!==!1):!1}).length}var f=c||!1;return a=C(a)?d(a):a,!D(a)||y(b)?a:(b=f?b:b.toLowerCase(),a.filter(function(a){return A(a)?(a=f?a:a.toLowerCase(),g(a,b)!==!1):C(a)?e(a,b):!1}))}}),b.module("a8m.group-by",["a8m.filter-watcher"]).filter("groupBy",["$parse","filterWatcher",function(a,b){return function(c,d){function e(a,b){var c,d={};return E(a,function(a){c=b(a),d[c]||(d[c]=[]),d[c].push(a)}),d}return!C(c)||y(d)?c:b.isMemoized("groupBy",arguments)||b.memoize("groupBy",arguments,this,e(c,a(d)))}}]),b.module("a8m.is-empty",[]).filter("isEmpty",function(){return function(a){return C(a)?!d(a).length:!a.length}}),b.module("a8m.join",[]).filter("join",function(){return function(a,b){return y(a)||!D(a)?a:(y(b)&&(b=" "),a.join(b))}}),b.module("a8m.last",[]).filter("last",["$parse",function(a){return function(b){var e,f,g,i=G(b);return i=C(i)?d(i):i,D(i)?(g=Array.prototype.slice.call(arguments,1),e=B(g[0])?g[0]:1,f=B(g[0])?B(g[1])?c:g[1]:g[0],g.length?h(i.reverse(),e,f?a(f):f).reverse():i[i.length-1]):i}}]),b.module("a8m.map",[]).filter("map",["$parse",function(a){return function(b,c){return b=C(b)?d(b):b,!D(b)||y(c)?b:b.map(function(b){return a(c)(b)})}}]),b.module("a8m.omit",[]).filter("omit",["$parse",function(a){return function(b,c){return b=C(b)?d(b):b,!D(b)||y(c)?b:b.filter(function(b){return!a(c)(b)})}}]),b.module("a8m.pick",[]).filter("pick",["$parse",function(a){return function(b,c){return b=C(b)?d(b):b,!D(b)||y(c)?b:b.filter(function(b){return a(c)(b)})}}]),b.module("a8m.range",[]).filter("range",function(){return function(a,b){for(var c=0;c<parseInt(b);c++)a.push(c);return a}}),b.module("a8m.remove-with",[]).filter("removeWith",function(){return function(a,b){return y(b)?a:(a=C(a)?d(a):a,a.filter(function(a){return!f(b,a)}))}}),b.module("a8m.remove",[]).filter("remove",function(){return function(a){a=C(a)?d(a):a;var b=Array.prototype.slice.call(arguments,1);return D(a)?a.filter(function(a){return!b.some(function(b){return H(b,a)})}):a}}),b.module("a8m.reverse",[]).filter("reverse",[function(){return function(a){return a=C(a)?d(a):a,A(a)?a.split("").reverse().join(""):D(a)?a.slice().reverse():a}}]),b.module("a8m.search-field",[]).filter("searchField",["$parse",function(a){return function(b){var c,e;b=C(b)?d(b):b;var f=Array.prototype.slice.call(arguments,1);return D(b)&&f.length?b.map(function(b){return e=f.map(function(d){return(c=a(d))(b)}).join(" "),F(b,{searchField:e})}):b}}]),b.module("a8m.to-array",[]).filter("toArray",function(){return function(a,b){return C(a)?b?Object.keys(a).map(function(b){return F(a[b],{$key:b})}):d(a):a}}),b.module("a8m.unique",[]).filter({unique:["$parse",v],uniq:["$parse",v]}),b.module("a8m.where",[]).filter("where",function(){return function(a,b){return y(b)?a:(a=C(a)?d(a):a,a.filter(function(a){return f(b,a)}))}}),b.module("a8m.xor",[]).filter("xor",["$parse",function(a){return function(b,c,e){function f(b,c){var d=a(e);return c.some(function(a){return e?H(d(a),d(b)):H(a,b)})}return e=e||!1,b=C(b)?d(b):b,c=C(c)?d(c):c,D(b)&&D(c)?b.concat(c).filter(function(a){return!(f(a,b)&&f(a,c))}):b}}]),b.module("a8m.math.byteFmt",["a8m.math"]).filter("byteFmt",["$math",function(a){return function(b,c){return B(c)&&isFinite(c)&&c%1===0&&c>=0&&B(b)&&isFinite(b)?1024>b?i(b,c,a)+" B":1048576>b?i(b/1024,c,a)+" KB":1073741824>b?i(b/1048576,c,a)+" MB":i(b/1073741824,c,a)+" GB":"NaN"}}]),b.module("a8m.math.degrees",["a8m.math"]).filter("degrees",["$math",function(a){return function(b,c){if(B(c)&&isFinite(c)&&c%1===0&&c>=0&&B(b)&&isFinite(b)){var d=180*b/a.PI;return a.round(d*a.pow(10,c))/a.pow(10,c)}return"NaN"}}]),b.module("a8m.math.kbFmt",["a8m.math"]).filter("kbFmt",["$math",function(a){return function(b,c){return B(c)&&isFinite(c)&&c%1===0&&c>=0&&B(b)&&isFinite(b)?1024>b?i(b,c,a)+" KB":1048576>b?i(b/1024,c,a)+" MB":i(b/1048576,c,a)+" GB":"NaN"}}]),b.module("a8m.math",[]).factory("$math",["$window",function(a){return a.Math}]),b.module("a8m.math.max",["a8m.math"]).filter("max",["$math","$parse",function(a,b){function c(c,d){var e=c.map(function(a){return b(d)(a)});return e.indexOf(a.max.apply(a,e))}return function(b,d){return D(b)?y(d)?a.max.apply(a,b):b[c(b,d)]:b}}]),b.module("a8m.math.min",["a8m.math"]).filter("min",["$math","$parse",function(a,b){function c(c,d){var e=c.map(function(a){return b(d)(a)});return e.indexOf(a.min.apply(a,e))}return function(b,d){return D(b)?y(d)?a.min.apply(a,b):b[c(b,d)]:b}}]),b.module("a8m.math.percent",["a8m.math"]).filter("percent",["$math","$window",function(a,b){return function(c,d,e){var f=A(c)?b.Number(c):c;return d=d||100,e=e||!1,!B(f)||b.isNaN(f)?c:e?a.round(f/d*100):f/d*100}}]),b.module("a8m.math.radians",["a8m.math"]).filter("radians",["$math",function(a){return function(b,c){if(B(c)&&isFinite(c)&&c%1===0&&c>=0&&B(b)&&isFinite(b)){var d=3.14159265359*b/180;return a.round(d*a.pow(10,c))/a.pow(10,c)}return"NaN"}}]),b.module("a8m.math.radix",[]).filter("radix",function(){return function(a,b){var c=/^[2-9]$|^[1-2]\d$|^3[0-6]$/;return B(a)&&c.test(b)?a.toString(b).toUpperCase():a}}),b.module("a8m.math.shortFmt",["a8m.math"]).filter("shortFmt",["$math",function(a){return function(b,c){return B(c)&&isFinite(c)&&c%1===0&&c>=0&&B(b)&&isFinite(b)?1e3>b?b:1e6>b?i(b/1e3,c,a)+" K":1e9>b?i(b/1e6,c,a)+" M":i(b/1e9,c,a)+" B":"NaN"}}]),b.module("a8m.math.sum",[]).filter("sum",function(){return function(a,b){return D(a)?a.reduce(function(a,b){return a+b},b||0):a}}),b.module("a8m.ends-with",[]).filter("endsWith",function(){return function(a,b,c){var d,e=c||!1;return!A(a)||y(b)?a:(a=e?a:a.toLowerCase(),d=a.length-b.length,-1!==a.indexOf(e?b:b.toLowerCase(),d))}}),b.module("a8m.latinize",[]).filter("latinize",[function(){function a(a){return a.replace(/[^\u0000-\u007E]/g,function(a){return c[a]||a})}for(var b=[{base:"A",letters:"AⒶＡÀÁÂẦẤẪẨÃĀĂẰẮẴẲȦǠÄǞẢÅǺǍȀȂẠẬẶḀĄȺⱯ"},{base:"AA",letters:"Ꜳ"},{base:"AE",letters:"ÆǼǢ"},{base:"AO",letters:"Ꜵ"},{base:"AU",letters:"Ꜷ"},{base:"AV",letters:"ꜸꜺ"},{base:"AY",letters:"Ꜽ"},{base:"B",letters:"BⒷＢḂḄḆɃƂƁ"},{base:"C",letters:"CⒸＣĆĈĊČÇḈƇȻꜾ"},{base:"D",letters:"DⒹＤḊĎḌḐḒḎĐƋƊƉꝹ"},{base:"DZ",letters:"ǱǄ"},{base:"Dz",letters:"ǲǅ"},{base:"E",letters:"EⒺＥÈÉÊỀẾỄỂẼĒḔḖĔĖËẺĚȄȆẸỆȨḜĘḘḚƐƎ"},{base:"F",letters:"FⒻＦḞƑꝻ"},{base:"G",letters:"GⒼＧǴĜḠĞĠǦĢǤƓꞠꝽꝾ"},{base:"H",letters:"HⒽＨĤḢḦȞḤḨḪĦⱧⱵꞍ"},{base:"I",letters:"IⒾＩÌÍÎĨĪĬİÏḮỈǏȈȊỊĮḬƗ"},{base:"J",letters:"JⒿＪĴɈ"},{base:"K",letters:"KⓀＫḰǨḲĶḴƘⱩꝀꝂꝄꞢ"},{base:"L",letters:"LⓁＬĿĹĽḶḸĻḼḺŁȽⱢⱠꝈꝆꞀ"},{base:"LJ",letters:"Ǉ"},{base:"Lj",letters:"ǈ"},{base:"M",letters:"MⓂＭḾṀṂⱮƜ"},{base:"N",letters:"NⓃＮǸŃÑṄŇṆŅṊṈȠƝꞐꞤ"},{base:"NJ",letters:"Ǌ"},{base:"Nj",letters:"ǋ"},{base:"O",letters:"OⓄＯÒÓÔỒỐỖỔÕṌȬṎŌṐṒŎȮȰÖȪỎŐǑȌȎƠỜỚỠỞỢỌỘǪǬØǾƆƟꝊꝌ"},{base:"OI",letters:"Ƣ"},{base:"OO",letters:"Ꝏ"},{base:"OU",letters:"Ȣ"},{base:"OE",letters:"Œ"},{base:"oe",letters:"œ"},{base:"P",letters:"PⓅＰṔṖƤⱣꝐꝒꝔ"},{base:"Q",letters:"QⓆＱꝖꝘɊ"},{base:"R",letters:"RⓇＲŔṘŘȐȒṚṜŖṞɌⱤꝚꞦꞂ"},{base:"S",letters:"SⓈＳẞŚṤŜṠŠṦṢṨȘŞⱾꞨꞄ"},{base:"T",letters:"TⓉＴṪŤṬȚŢṰṮŦƬƮȾꞆ"},{base:"TZ",letters:"Ꜩ"},{base:"U",letters:"UⓊＵÙÚÛŨṸŪṺŬÜǛǗǕǙỦŮŰǓȔȖƯỪỨỮỬỰỤṲŲṶṴɄ"},{base:"V",letters:"VⓋＶṼṾƲꝞɅ"},{base:"VY",letters:"Ꝡ"},{base:"W",letters:"WⓌＷẀẂŴẆẄẈⱲ"},{base:"X",letters:"XⓍＸẊẌ"},{base:"Y",letters:"YⓎＹỲÝŶỸȲẎŸỶỴƳɎỾ"},{base:"Z",letters:"ZⓏＺŹẐŻŽẒẔƵȤⱿⱫꝢ"},{base:"a",letters:"aⓐａẚàáâầấẫẩãāăằắẵẳȧǡäǟảåǻǎȁȃạậặḁąⱥɐ"},{base:"aa",letters:"ꜳ"},{base:"ae",letters:"æǽǣ"},{base:"ao",letters:"ꜵ"},{base:"au",letters:"ꜷ"},{base:"av",letters:"ꜹꜻ"},{base:"ay",letters:"ꜽ"},{base:"b",letters:"bⓑｂḃḅḇƀƃɓ"},{base:"c",letters:"cⓒｃćĉċčçḉƈȼꜿↄ"},{base:"d",letters:"dⓓｄḋďḍḑḓḏđƌɖɗꝺ"},{base:"dz",letters:"ǳǆ"},{base:"e",letters:"eⓔｅèéêềếễểẽēḕḗĕėëẻěȅȇẹệȩḝęḙḛɇɛǝ"},{base:"f",letters:"fⓕｆḟƒꝼ"},{base:"g",letters:"gⓖｇǵĝḡğġǧģǥɠꞡᵹꝿ"},{base:"h",letters:"hⓗｈĥḣḧȟḥḩḫẖħⱨⱶɥ"},{base:"hv",letters:"ƕ"},{base:"i",letters:"iⓘｉìíîĩīĭïḯỉǐȉȋịįḭɨı"},{base:"j",letters:"jⓙｊĵǰɉ"},{base:"k",letters:"kⓚｋḱǩḳķḵƙⱪꝁꝃꝅꞣ"},{base:"l",letters:"lⓛｌŀĺľḷḹļḽḻſłƚɫⱡꝉꞁꝇ"},{base:"lj",letters:"ǉ"},{base:"m",letters:"mⓜｍḿṁṃɱɯ"},{base:"n",letters:"nⓝｎǹńñṅňṇņṋṉƞɲŉꞑꞥ"},{base:"nj",letters:"ǌ"},{base:"o",letters:"oⓞｏòóôồốỗổõṍȭṏōṑṓŏȯȱöȫỏőǒȍȏơờớỡởợọộǫǭøǿɔꝋꝍɵ"},{base:"oi",letters:"ƣ"},{base:"ou",letters:"ȣ"},{base:"oo",letters:"ꝏ"},{base:"p",letters:"pⓟｐṕṗƥᵽꝑꝓꝕ"},{base:"q",letters:"qⓠｑɋꝗꝙ"},{base:"r",letters:"rⓡｒŕṙřȑȓṛṝŗṟɍɽꝛꞧꞃ"},{base:"s",letters:"sⓢｓßśṥŝṡšṧṣṩșşȿꞩꞅẛ"},{base:"t",letters:"tⓣｔṫẗťṭțţṱṯŧƭʈⱦꞇ"},{base:"tz",letters:"ꜩ"},{base:"u",letters:"uⓤｕùúûũṹūṻŭüǜǘǖǚủůűǔȕȗưừứữửựụṳųṷṵʉ"},{base:"v",letters:"vⓥｖṽṿʋꝟʌ"},{base:"vy",letters:"ꝡ"},{base:"w",letters:"wⓦｗẁẃŵẇẅẘẉⱳ"},{base:"x",letters:"xⓧｘẋẍ"},{base:"y",letters:"yⓨｙỳýŷỹȳẏÿỷẙỵƴɏỿ"},{base:"z",letters:"zⓩｚźẑżžẓẕƶȥɀⱬꝣ"}],c={},d=0;d<b.length;d++)for(var e=b[d].letters.split(""),f=0;f<e.length;f++)c[e[f]]=b[d].base;return function(b){return A(b)?a(b):b}}]),b.module("a8m.ltrim",[]).filter("ltrim",function(){return function(a,b){var c=b||"\\s";return A(a)?a.replace(new RegExp("^"+c+"+"),""):a}}),b.module("a8m.match",[]).filter("match",function(){return function(a,b,c){var d=new RegExp(b,c);return A(a)?a.match(d):null}}),b.module("a8m.repeat",[]).filter("repeat",[function(){return function(a,b,c){var d=~~b;return A(a)&&d?w(a,--b,c||""):a}}]),b.module("a8m.rtrim",[]).filter("rtrim",function(){return function(a,b){var c=b||"\\s";return A(a)?a.replace(new RegExp(c+"+$"),""):a}}),b.module("a8m.slugify",[]).filter("slugify",[function(){return function(a,b){var c=y(b)?"-":b;return A(a)?a.toLowerCase().replace(/\s+/g,c):a}}]),b.module("a8m.starts-with",[]).filter("startsWith",function(){return function(a,b,c){var d=c||!1;return!A(a)||y(b)?a:(a=d?a:a.toLowerCase(),!a.indexOf(d?b:b.toLowerCase()))}}),b.module("a8m.stringular",[]).filter("stringular",function(){return function(a){var b=Array.prototype.slice.call(arguments,1);return a.replace(/{(\d+)}/g,function(a,c){return y(b[c])?a:b[c]})}}),b.module("a8m.strip-tags",[]).filter("stripTags",function(){return function(a){return A(a)?a.replace(/<\S[^><]*>/g,""):a}}),b.module("a8m.test",[]).filter("test",function(){return function(a,b,c){var d=new RegExp(b,c);return A(a)?d.test(a):a}}),b.module("a8m.trim",[]).filter("trim",function(){return function(a,b){var c=b||"\\s";return A(a)?a.replace(new RegExp("^"+c+"+|"+c+"+$","g"),""):a}}),b.module("a8m.truncate",[]).filter("truncate",function(){return function(a,b,c,d){return b=y(b)?a.length:b,d=d||!1,c=c||"",!A(a)||a.length<=b?a:a.substring(0,d?-1===a.indexOf(" ",b)?a.length:a.indexOf(" ",b):b)+c}}),b.module("a8m.ucfirst",[]).filter("ucfirst",[function(){return function(a){return A(a)?a.split(" ").map(function(a){return a.charAt(0).toUpperCase()+a.substring(1)}).join(" "):a}}]),b.module("a8m.uri-component-encode",[]).filter("uriComponentEncode",["$window",function(a){return function(b){return A(b)?a.encodeURIComponent(b):b}}]),b.module("a8m.uri-encode",[]).filter("uriEncode",["$window",function(a){return function(b){return A(b)?a.encodeURI(b):b}}]),b.module("a8m.wrap",[]).filter("wrap",function(){return function(a,b,c){return A(a)&&x(b)?[b,a,c||b].join(""):a}}),b.module("a8m.filter-watcher",[]).provider("filterWatcher",function(){this.$get=["$window","$rootScope",function(a,b){function c(b,c){function d(){var b=[];return function(c,d){if(C(d)&&!e(d)){if(~b.indexOf(d))return"[Circular]";b.push(d)}return a==d?"$WINDOW":a.document==d?"$DOCUMENT":k(d)?"$SCOPE":d}}return[b,JSON.stringify(c,d())].join("#").replace(/"/g,"")}function d(a){var b=a.targetScope.$id;E(l[b],function(a){delete j[a]}),delete l[b]}function f(){m(function(){b.$$phase||(j={})},2e3)}function g(a,b){var c=a.$id;return y(l[c])&&(a.$on("$destroy",d),l[c]=[]),l[c].push(b)}function h(a,b){var d=c(a,b);return j[d]}function i(a,b,d,e){var h=c(a,b);return j[h]=e,k(d)?g(d,h):f(),e}var j={},l={},m=a.setTimeout;return{isMemoized:h,memoize:i}}]}),b.module("angular.filter",["a8m.ucfirst","a8m.uri-encode","a8m.uri-component-encode","a8m.slugify","a8m.latinize","a8m.strip-tags","a8m.stringular","a8m.truncate","a8m.starts-with","a8m.ends-with","a8m.wrap","a8m.trim","a8m.ltrim","a8m.rtrim","a8m.repeat","a8m.test","a8m.match","a8m.to-array","a8m.concat","a8m.contains","a8m.unique","a8m.is-empty","a8m.after","a8m.after-where","a8m.before","a8m.before-where","a8m.defaults","a8m.where","a8m.reverse","a8m.remove","a8m.remove-with","a8m.group-by","a8m.count-by","a8m.chunk-by","a8m.search-field","a8m.fuzzy-by","a8m.fuzzy","a8m.omit","a8m.pick","a8m.every","a8m.filter-by","a8m.xor","a8m.map","a8m.first","a8m.last","a8m.flatten","a8m.join","a8m.range","a8m.math","a8m.math.max","a8m.math.min","a8m.math.percent","a8m.math.radix","a8m.math.sum","a8m.math.degrees","a8m.math.radians","a8m.math.byteFmt","a8m.math.kbFmt","a8m.math.shortFmt","a8m.angular","a8m.conditions","a8m.is-null","a8m.filter-watcher"])}(window,window.angular);
+ */
+(function ( window, angular, undefined ) {
+/*jshint globalstrict:true*/
+'use strict';
+
+var isDefined = angular.isDefined,
+    isUndefined = angular.isUndefined,
+    isFunction = angular.isFunction,
+    isString = angular.isString,
+    isNumber = angular.isNumber,
+    isObject = angular.isObject,
+    isArray = angular.isArray,
+    forEach = angular.forEach,
+    extend = angular.extend,
+    copy = angular.copy,
+    equals = angular.equals;
+
+
+/**
+ * @description
+ * get an object and return array of values
+ * @param object
+ * @returns {Array}
+ */
+function toArray(object) {
+  return isArray(object) ? object :
+    Object.keys(object).map(function(key) {
+      return object[key];
+    });
+}
+
+/**
+ * @param value
+ * @returns {boolean}
+ */
+function isNull(value) {
+    return value === null;
+}
+
+/**
+ * @description
+ * return if object contains partial object
+ * @param partial{object}
+ * @param object{object}
+ * @returns {boolean}
+ */
+function objectContains(partial, object) {
+  var keys = Object.keys(partial);
+
+  return keys.map(function(el) {
+    return (object[el] !== undefined) && (object[el] == partial[el]);
+  }).indexOf(false) == -1;
+
+}
+
+/**
+ * @description
+ * search for approximate pattern in string
+ * @param word
+ * @param pattern
+ * @returns {*}
+ */
+function hasApproxPattern(word, pattern) {
+  if(pattern === '')
+    return word;
+
+  var index = word.indexOf(pattern.charAt(0));
+
+  if(index === -1)
+    return false;
+
+  return hasApproxPattern(word.substr(index+1), pattern.substr(1))
+}
+
+/**
+ * @description
+ * return the first n element of an array,
+ * if expression provided, is returns as long the expression return truthy
+ * @param array
+ * @param n {number}
+ * @param expression {$parse}
+ * @return array or single object
+ */
+function getFirstMatches(array, n, expression) {
+  var count = 0;
+
+  return array.filter(function(elm) {
+    var rest = isDefined(expression) ? (count < n && expression(elm)) : count < n;
+    count = rest ? count+1 : count;
+
+    return rest;
+  });
+}
+/**
+ * Polyfill to ECMA6 String.prototype.contains
+ */
+if (!String.prototype.contains) {
+  String.prototype.contains = function() {
+    return String.prototype.indexOf.apply(this, arguments) !== -1;
+  };
+}
+
+/**
+ * @param num {Number}
+ * @param decimal {Number}
+ * @param $math
+ * @returns {Number}
+ */
+function convertToDecimal(num, decimal, $math){
+  return $math.round(num * $math.pow(10,decimal)) / ($math.pow(10,decimal));
+}
+
+/**
+ * @description
+ * Get an object, and return an array composed of it's properties names(nested too).
+ * @param obj {Object}
+ * @param stack {Array}
+ * @param parent {String}
+ * @returns {Array}
+ * @example
+ * parseKeys({ a:1, b: { c:2, d: { e: 3 } } }) ==> ["a", "b.c", "b.d.e"]
+ */
+function deepKeys(obj, stack, parent) {
+  stack = stack || [];
+  var keys = Object.keys(obj);
+
+  keys.forEach(function(el) {
+    //if it's a nested object
+    if(isObject(obj[el]) && !isArray(obj[el])) {
+      //concatenate the new parent if exist
+      var p = parent ? parent + '.' + el : parent;
+      deepKeys(obj[el], stack, p || el);
+    } else {
+      //create and save the key
+      var key = parent ? parent + '.' + el : el;
+      stack.push(key)
+    }
+  });
+  return stack
+}
+
+/**
+ * @description
+ * Test if given object is a Scope instance
+ * @param obj
+ * @returns {Boolean}
+ */
+function isScope(obj) {
+  return obj && obj.$evalAsync && obj.$watch;
+}
+
+/**
+ * @ngdoc filter
+ * @name a8m.angular
+ * @kind function
+ *
+ * @description
+ * reference to angular function
+ */
+
+angular.module('a8m.angular', [])
+
+    .filter('isUndefined', function () {
+      return function (input) {
+        return angular.isUndefined(input);
+      }
+    })
+    .filter('isDefined', function() {
+      return function (input) {
+        return angular.isDefined(input);
+      }
+    })
+    .filter('isFunction', function() {
+      return function (input) {
+        return angular.isFunction(input);
+      }
+    })
+    .filter('isString', function() {
+      return function (input) {
+        return angular.isString(input)
+      }
+    })
+    .filter('isNumber', function() {
+      return function (input) {
+        return angular.isNumber(input);
+      }
+    })
+    .filter('isArray', function() {
+      return function (input) {
+        return angular.isArray(input);
+      }
+    })
+    .filter('isObject', function() {
+      return function (input) {
+        return angular.isObject(input);
+      }
+    })
+    .filter('isEqual', function() {
+      return function (o1, o2) {
+        return angular.equals(o1, o2);
+      }
+    });
+
+/**
+ * @ngdoc filter
+ * @name a8m.conditions
+ * @kind function
+ *
+ * @description
+ * reference to math conditions
+ */
+ angular.module('a8m.conditions', [])
+
+  .filter({
+    isGreaterThan  : isGreaterThanFilter,
+    '>'            : isGreaterThanFilter,
+
+    isGreaterThanOrEqualTo  : isGreaterThanOrEqualToFilter,
+    '>='                    : isGreaterThanOrEqualToFilter,
+
+    isLessThan  : isLessThanFilter,
+    '<'         : isLessThanFilter,
+
+    isLessThanOrEqualTo  : isLessThanOrEqualToFilter,
+    '<='                 : isLessThanOrEqualToFilter,
+
+    isEqualTo  : isEqualToFilter,
+    '=='       : isEqualToFilter,
+
+    isNotEqualTo  : isNotEqualToFilter,
+    '!='          : isNotEqualToFilter,
+
+    isIdenticalTo  : isIdenticalToFilter,
+    '==='          : isIdenticalToFilter,
+
+    isNotIdenticalTo  : isNotIdenticalToFilter,
+    '!=='             : isNotIdenticalToFilter
+  });
+
+  function isGreaterThanFilter() {
+    return function (input, check) {
+      return input > check;
+    };
+  }
+
+  function isGreaterThanOrEqualToFilter() {
+    return function (input, check) {
+      return input >= check;
+    };
+  }
+
+  function isLessThanFilter() {
+    return function (input, check) {
+      return input < check;
+    };
+  }
+
+  function isLessThanOrEqualToFilter() {
+    return function (input, check) {
+      return input <= check;
+    };
+  }
+
+  function isEqualToFilter() {
+    return function (input, check) {
+      return input == check;
+    };
+  }
+
+  function isNotEqualToFilter() {
+    return function (input, check) {
+      return input != check;
+    };
+  }
+
+  function isIdenticalToFilter() {
+    return function (input, check) {
+      return input === check;
+    };
+  }
+
+  function isNotIdenticalToFilter() {
+    return function (input, check) {
+      return input !== check;
+    };
+  }
+/**
+ * @ngdoc filter
+ * @name isNull
+ * @kind function
+ *
+ * @description
+ * checks if value is null or not
+ * @return Boolean
+ */
+angular.module('a8m.is-null', [])
+    .filter('isNull', function () {
+      return function(input) {
+        return isNull(input);
+      }
+    });
+
+/**
+ * @ngdoc filter
+ * @name after-where
+ * @kind function
+ *
+ * @description
+ * get a collection and properties object, and returns all of the items
+ * in the collection after the first that found with the given properties.
+ *
+ */
+angular.module('a8m.after-where', [])
+    .filter('afterWhere', function() {
+      return function (collection, object) {
+
+        collection = (isObject(collection))
+          ? toArray(collection)
+          : collection;
+
+        if(!isArray(collection) || isUndefined(object))
+          return collection;
+
+        var index = collection.map( function( elm ) {
+          return objectContains(object, elm);
+        }).indexOf( true );
+
+        return collection.slice((index === -1) ? 0 : index);
+      }
+    });
+
+/**
+ * @ngdoc filter
+ * @name after
+ * @kind function
+ *
+ * @description
+ * get a collection and specified count, and returns all of the items
+ * in the collection after the specified count.
+ *
+ */
+
+angular.module('a8m.after', [])
+    .filter('after', function() {
+      return function (collection, count) {
+        collection = (isObject(collection))
+          ? toArray(collection)
+          : collection;
+
+        return (isArray(collection))
+          ? collection.slice(count)
+          : collection;
+      }
+    });
+
+/**
+ * @ngdoc filter
+ * @name before-where
+ * @kind function
+ *
+ * @description
+ * get a collection and properties object, and returns all of the items
+ * in the collection before the first that found with the given properties.
+ */
+angular.module('a8m.before-where', [])
+  .filter('beforeWhere', function() {
+    return function (collection, object) {
+
+      collection = (isObject(collection))
+        ? toArray(collection)
+        : collection;
+
+      if(!isArray(collection) || isUndefined(object))
+        return collection;
+
+      var index = collection.map( function( elm ) {
+        return objectContains(object, elm);
+      }).indexOf( true );
+
+      return collection.slice(0, (index === -1) ? collection.length : ++index);
+    }
+  });
+
+/**
+ * @ngdoc filter
+ * @name before
+ * @kind function
+ *
+ * @description
+ * get a collection and specified count, and returns all of the items
+ * in the collection before the specified count.
+ */
+angular.module('a8m.before', [])
+    .filter('before', function() {
+      return function (collection, count) {
+        collection = (isObject(collection))
+          ? toArray(collection)
+          : collection;
+
+        return (isArray(collection))
+          ? collection.slice(0, (!count) ? count : --count)
+          : collection;
+      }
+    });
+
+/**
+ * @ngdoc filter
+ * @name concat
+ * @kind function
+ *
+ * @description
+ * get (array/object, object/array) and return merged collection
+ */
+angular.module('a8m.concat', [])
+  //TODO(Ariel):unique option ? or use unique filter to filter result
+  .filter('concat', [function () {
+    return function (collection, joined) {
+
+      if (isUndefined(joined)) {
+        return collection;
+      }
+      if (isArray(collection)) {
+        return (isObject(joined))
+          ? collection.concat(toArray(joined))
+          : collection.concat(joined);
+      }
+
+      if (isObject(collection)) {
+        var array = toArray(collection);
+        return (isObject(joined))
+          ? array.concat(toArray(joined))
+          : array.concat(joined);
+      }
+      return collection;
+    };
+  }
+]);
+
+/**
+ * @ngdoc filter
+ * @name contains
+ * @kind function
+ *
+ * @description
+ * Checks if given expression is present in one or more object in the collection
+ */
+angular.module('a8m.contains', [])
+  .filter({
+    contains: ['$parse', containsFilter],
+    some: ['$parse', containsFilter]
+  });
+
+function containsFilter( $parse ) {
+    return function (collection, expression) {
+
+      collection = (isObject(collection)) ? toArray(collection) : collection;
+
+      if(!isArray(collection) || isUndefined(expression)) {
+        return false;
+      }
+
+      return collection.some(function(elm) {
+        return (isObject(elm) || isFunction(expression))
+          ? $parse(expression)(elm)
+          : elm === expression;
+      });
+
+    }
+ }
+
+/**
+ * @ngdoc filter
+ * @name countBy
+ * @kind function
+ *
+ * @description
+ * Sorts a list into groups and returns a count for the number of objects in each group.
+ */
+
+angular.module('a8m.count-by', [])
+
+  .filter('countBy', [ '$parse', function ( $parse ) {
+    return function (collection, property) {
+
+      var result = {},
+        get = $parse(property),
+        prop;
+
+      collection = (isObject(collection)) ? toArray(collection) : collection;
+
+      if(!isArray(collection) || isUndefined(property)) {
+        return collection;
+      }
+
+      collection.forEach( function( elm ) {
+        prop = get(elm);
+
+        if(!result[prop]) {
+          result[prop] = 0;
+        }
+
+        result[prop]++;
+      });
+
+      return result;
+    }
+  }]);
+
+/**
+ * @ngdoc filter
+ * @name defaults
+ * @kind function
+ *
+ * @description
+ * defaultsFilter allows to specify a default fallback value for properties that resolve to undefined.
+ */
+angular.module('a8m.defaults', [])
+  .filter('defaults', ['$parse', function( $parse ) {
+    return function(collection, defaults) {
+
+      collection = (isObject(collection)) ? toArray(collection) : collection;
+
+      if(!isArray(collection) || !isObject(defaults)) {
+        return collection;
+      }
+
+      var keys = deepKeys(defaults);
+
+      collection.forEach(function(elm) {
+        //loop through all the keys
+        keys.forEach(function(key) {
+          var getter = $parse(key);
+          var setter = getter.assign;
+          //if it's not exist
+          if(isUndefined(getter(elm))) {
+            //get from defaults, and set to the returned object
+            setter(elm, getter(defaults))
+          }
+        });
+      });
+
+      return collection;
+    }
+  }]);
+/**
+ * @ngdoc filter
+ * @name every
+ * @kind function
+ *
+ * @description
+ * Checks if given expression is present in all members in the collection
+ *
+ */
+angular.module('a8m.every', [])
+  .filter('every', ['$parse', function($parse) {
+    return function (collection, expression) {
+      collection = (isObject(collection)) ? toArray(collection) : collection;
+
+      if(!isArray(collection) || isUndefined(expression)) {
+        return true;
+      }
+
+      return collection.every( function(elm) {
+        return (isObject(elm) || isFunction(expression))
+          ? $parse(expression)(elm)
+          : elm === expression;
+      });
+    }
+  }]);
+
+/**
+ * @ngdoc filter
+ * @name filterBy
+ * @kind function
+ *
+ * @description
+ * filter by specific properties, avoid the rest
+ */
+angular.module('a8m.filter-by', [])
+  .filter('filterBy', ['$parse', function( $parse ) {
+    return function(collection, properties, search) {
+
+      var comparator;
+
+      search = (isString(search) || isNumber(search)) ?
+        String(search).toLowerCase() : undefined;
+
+      collection = (isObject(collection)) ? toArray(collection) : collection;
+
+      if(!isArray(collection) || isUndefined(search)) {
+        return collection;
+      }
+
+      return collection.filter(function(elm) {
+        return properties.some(function(prop) {
+
+          /**
+           * check if there is concatenate properties
+           * example:
+           * object: { first: 'foo', last:'bar' }
+           * filterBy: ['first + last'] => search by full name(i.e 'foo bar')
+           */
+          if(!~prop.indexOf('+')) {
+            comparator = $parse(prop)(elm)
+          } else {
+            var propList = prop.replace(new RegExp('\\s', 'g'), '').split('+');
+            comparator = propList.reduce(function(prev, cur, index) {
+              return (index === 1) ? $parse(prev)(elm) + ' ' + $parse(cur)(elm) :
+                prev + ' ' + $parse(cur)(elm);
+            });
+          }
+
+          return (isString(comparator) || isNumber(comparator))
+            ? String(comparator).toLowerCase().contains(search)
+            : false;
+        });
+      });
+    }
+  }]);
+
+/**
+ * @ngdoc filter
+ * @name first
+ * @kind function
+ *
+ * @description
+ * Gets the first element or first n elements of an array
+ * if callback is provided, is returns as long the callback return truthy
+ */
+angular.module('a8m.first', [])
+  .filter('first', ['$parse', function( $parse ) {
+    return function(collection) {
+
+      var n
+        , getter
+        , args;
+
+      collection = (isObject(collection))
+        ? toArray(collection)
+        : collection;
+
+      if(!isArray(collection)) {
+        return collection;
+      }
+
+      args = Array.prototype.slice.call(arguments, 1);
+      n = (isNumber(args[0])) ? args[0] : 1;
+      getter = (!isNumber(args[0]))  ? args[0] : (!isNumber(args[1])) ? args[1] : undefined;
+
+      return (args.length) ? getFirstMatches(collection, n,(getter) ? $parse(getter) : getter) :
+        collection[0];
+    }
+  }]);
+
+/**
+ * @ngdoc filter
+ * @name flatten
+ * @kind function
+ *
+ * @description
+ * Flattens a nested array (the nesting can be to any depth).
+ * If you pass shallow, the array will only be flattened a single level
+ */
+angular.module('a8m.flatten', [])
+  .filter('flatten', function () {
+    return function(collection, shallow) {
+
+      shallow = shallow || false;
+      collection = (isObject(collection))
+        ? toArray(collection)
+        : collection;
+
+      if(!isArray(collection)) {
+        return collection;
+      }
+
+      return !shallow
+        ? flatten(collection, 0)
+        : [].concat.apply([], collection);
+    }
+  });
+
+/**
+ * flatten nested array (the nesting can be to any depth).
+ * @param array {Array}
+ * @param i {int}
+ * @returns {Array}
+ * @private
+ */
+function flatten(array, i) {
+  i = i || 0;
+
+  if(i >= array.length)
+    return array;
+
+  if(isArray(array[i])) {
+    return flatten(array.slice(0,i)
+      .concat(array[i], array.slice(i+1)), i);
+  }
+  return flatten(array, i+1);
+}
+
+/**
+ * @ngdoc filter
+ * @name fuzzyByKey
+ * @kind function
+ *
+ * @description
+ * fuzzy string searching by key
+ */
+angular.module('a8m.fuzzy-by', [])
+  .filter('fuzzyBy', ['$parse', function ( $parse ) {
+    return function (collection, property, search, csensitive) {
+
+      var sensitive = csensitive || false,
+        prop, getter;
+
+      collection = (isObject(collection)) ? toArray(collection) : collection;
+
+      if(!isArray(collection) || isUndefined(property)
+        || isUndefined(search)) {
+        return collection;
+      }
+
+      getter = $parse(property);
+
+      return collection.filter(function(elm) {
+
+        prop = getter(elm);
+        if(!isString(prop)) {
+          return false;
+        }
+
+        prop = (sensitive) ? prop : prop.toLowerCase();
+        search = (sensitive) ? search : search.toLowerCase();
+
+        return hasApproxPattern(prop, search) !== false
+      })
+    }
+
+ }]);
+/**
+ * @ngdoc filter
+ * @name fuzzy
+ * @kind function
+ *
+ * @description
+ * fuzzy string searching for array of strings, objects
+ */
+angular.module('a8m.fuzzy', [])
+  .filter('fuzzy', function () {
+    return function (collection, search, csensitive) {
+
+      var sensitive = csensitive || false;
+
+      collection = (isObject(collection)) ? toArray(collection) : collection;
+
+      if(!isArray(collection) || isUndefined(search)) {
+        return collection;
+      }
+
+      search = (sensitive) ? search : search.toLowerCase();
+
+      return collection.filter(function(elm) {
+
+        if(isString(elm)) {
+          elm = (sensitive) ? elm : elm.toLowerCase();
+          return hasApproxPattern(elm, search) !== false
+        }
+
+        return (isObject(elm)) ? _hasApproximateKey(elm, search) : false;
+
+      });
+
+      /**
+       * checks if object has key{string} that match
+       * to fuzzy search pattern
+       * @param object
+       * @param search
+       * @returns {boolean}
+       * @private
+       */
+      function _hasApproximateKey(object, search) {
+        var properties = Object.keys(object),
+          prop, flag;
+        return 0 < properties.filter(function (elm) {
+          prop = object[elm];
+
+          //avoid iteration if we found some key that equal[performance]
+          if(flag) return true;
+
+          if (isString(prop)) {
+            prop = (sensitive) ? prop : prop.toLowerCase();
+            return flag = (hasApproxPattern(prop, search) !== false);
+          }
+
+          return false;
+
+        }).length;
+      }
+
+    }
+  });
+
+/**
+ * @ngdoc filter
+ * @name groupBy
+ * @kind function
+ *
+ * @description
+ * Create an object composed of keys generated from the result of running each element of a collection,
+ * each key is an array of the elements.
+ */
+
+angular.module('a8m.group-by', [ 'a8m.filter-watcher' ])
+
+  .filter('groupBy', [ '$parse', 'filterWatcher', function ( $parse, filterWatcher ) {
+    return function (collection, property) {
+
+      if(!isObject(collection) || isUndefined(property)) {
+        return collection;
+      }
+
+      var getterFn = $parse(property);
+
+      return filterWatcher.isMemoized('groupBy', arguments) ||
+        filterWatcher.memoize('groupBy', arguments, this,
+          _groupBy(collection, getterFn));
+
+      /**
+       * groupBy function
+       * @param collection
+       * @param getter
+       * @returns {{}}
+       */
+      function _groupBy(collection, getter) {
+        var result = {};
+        var prop;
+
+        forEach( collection, function( elm ) {
+          prop = getter(elm);
+
+          if(!result[prop]) {
+            result[prop] = [];
+          }
+          result[prop].push(elm);
+        });
+        return result;
+      }
+    }
+ }]);
+
+/**
+ * @ngdoc filter
+ * @name isEmpty
+ * @kind function
+ *
+ * @description
+ * get collection or string and return if it empty
+ */
+angular.module('a8m.is-empty', [])
+  .filter('isEmpty', function () {
+    return function(collection) {
+      return (isObject(collection))
+        ? !toArray(collection).length
+        : !collection.length;
+    }
+  });
+
+/**
+ * @ngdoc filter
+ * @name join
+ * @kind function
+ *
+ * @description
+ * join a collection by a provided delimiter (space by default)
+ */
+angular.module('a8m.join', [])
+  .filter('join', function () {
+    return function (input, delimiter) {
+      if (isUndefined(input) || !isArray(input)) {
+        return input;
+      }
+      if (isUndefined(delimiter)) {
+        delimiter = ' ';
+      }
+
+      return input.join(delimiter);
+    };
+  })
+;
+
+/**
+ * @ngdoc filter
+ * @name last
+ * @kind function
+ *
+ * @description
+ * Gets the last element or last n elements of an array
+ * if callback is provided, is returns as long the callback return truthy
+ */
+angular.module('a8m.last', [])
+  .filter('last', ['$parse', function( $parse ) {
+    return function(collection) {
+      var n
+        , getter
+        , args
+        //cuz reverse change our src collection
+        //and we don't want side effects
+        , reversed = copy(collection);
+
+      reversed = (isObject(reversed))
+        ? toArray(reversed)
+        : reversed;
+
+      if(!isArray(reversed)) {
+        return reversed;
+      }
+
+      args = Array.prototype.slice.call(arguments, 1);
+      n = (isNumber(args[0])) ? args[0] : 1;
+      getter = (!isNumber(args[0]))  ? args[0] : (!isNumber(args[1])) ? args[1] : undefined;
+
+      return (args.length)
+        //send reversed collection as arguments, and reverse it back as result
+        ? getFirstMatches(reversed.reverse(), n,(getter) ? $parse(getter) : getter).reverse()
+        //get the last element
+        : reversed[reversed.length-1];
+    }
+  }]);
+
+/**
+ * @ngdoc filter
+ * @name map
+ * @kind function
+ *
+ * @description
+ * Returns a new collection of the results of each expression execution.
+ */
+angular.module('a8m.map', [])
+  .filter('map', ['$parse', function($parse) {
+    return function (collection, expression) {
+
+      collection = (isObject(collection))
+        ? toArray(collection)
+        : collection;
+
+      if(!isArray(collection) || isUndefined(expression)) {
+        return collection;
+      }
+
+      return collection.map(function (elm) {
+        return $parse(expression)(elm);
+      });
+    }
+  }]);
+
+/**
+ * @ngdoc filter
+ * @name omit
+ * @kind function
+ *
+ * @description
+ * filter collection by expression
+ */
+
+angular.module('a8m.omit', [])
+
+  .filter('omit', ['$parse', function($parse) {
+    return function (collection, expression) {
+
+      collection = (isObject(collection))
+        ? toArray(collection)
+        : collection;
+
+      if(!isArray(collection) || isUndefined(expression)) {
+        return collection;
+      }
+
+      return collection.filter(function (elm) {
+        return !($parse(expression)(elm));
+      });
+    }
+  }]);
+
+/**
+ * @ngdoc filter
+ * @name omit
+ * @kind function
+ *
+ * @description
+ * filter collection by expression
+ */
+
+angular.module('a8m.pick', [])
+
+  .filter('pick', ['$parse', function($parse) {
+    return function (collection, expression) {
+
+      collection = (isObject(collection))
+        ? toArray(collection)
+        : collection;
+
+      if(!isArray(collection) || isUndefined(expression)) {
+        return collection;
+      }
+
+      return collection.filter(function (elm) {
+        return $parse(expression)(elm);
+      });
+    }
+  }]);
+
+/**
+ * @ngdoc filter
+ * @name removeWith
+ * @kind function
+ *
+ * @description
+ * get collection and properties object, and removed elements
+ * with this properties
+ */
+
+angular.module('a8m.remove-with', [])
+  .filter('removeWith', function() {
+    return function (collection, object) {
+
+      if(isUndefined(object)) {
+        return collection;
+      }
+      collection = isObject(collection)
+        ? toArray(collection)
+        : collection;
+
+      return collection.filter(function (elm) {
+        return !objectContains(object, elm);
+      });
+    }
+  });
+
+
+/**
+ * @ngdoc filter
+ * @name remove
+ * @kind function
+ *
+ * @description
+ * remove specific members from collection
+ */
+
+angular.module('a8m.remove', [])
+
+  .filter('remove', function () {
+    return function (collection) {
+
+      collection = (isObject(collection)) ? toArray(collection) : collection;
+
+      var args = Array.prototype.slice.call(arguments, 1);
+
+      if(!isArray(collection)) {
+        return collection;
+      }
+
+      return collection.filter( function( member ) {
+        return !args.some(function(nest) {
+          return equals(nest, member);
+        })
+      });
+
+    }
+  });
+
+/**
+ * @ngdoc filter
+ * @name reverse
+ * @kind function
+ *
+ * @description
+ * Reverses a string or collection
+ */
+angular.module('a8m.reverse', [])
+    .filter('reverse',[ function () {
+      return function (input) {
+        input = (isObject(input)) ? toArray(input) : input;
+
+        if(isString(input)) {
+          return input.split('').reverse().join('');
+        }
+
+        return isArray(input)
+          ? input.slice().reverse()
+          : input;
+      }
+    }]);
+
+/**
+ * @ngdoc filter
+ * @name searchField
+ * @kind function
+ *
+ * @description
+ * for each member, join several strings field and add them to
+ * new field called 'searchField' (use for search filtering)
+ */
+angular.module('a8m.search-field', [])
+  .filter('searchField', ['$parse', function ($parse) {
+    return function (collection) {
+
+      var get, field;
+
+      collection = (isObject(collection)) ? toArray(collection) : collection;
+
+      var args = Array.prototype.slice.call(arguments, 1);
+
+      if(!isArray(collection) || !args.length) {
+        return collection;
+      }
+
+      return collection.map(function(member) {
+
+        field = args.map(function(field) {
+          get = $parse(field);
+          return get(member);
+        }).join(' ');
+
+        return extend(member, { searchField: field });
+      });
+    }
+  }]);
+
+/**
+ * @ngdoc filter
+ * @name toArray
+ * @kind function
+ *
+ * @description
+ * Convert objects into stable arrays.
+ * if addKey set to true,the filter also attaches a new property
+ * $key to the value containing the original key that was used in
+ * the object we are iterating over to reference the property
+ */
+angular.module('a8m.to-array', [])
+  .filter('toArray', function() {
+    return function (collection, addKey) {
+
+      if(!isObject(collection)) {
+        return collection;
+      }
+
+      return !addKey
+        ? toArray(collection)
+        : Object.keys(collection).map(function (key) {
+            return extend(collection[key], { $key: key });
+          });
+    }
+  });
+
+/**
+ * @ngdoc filter
+ * @name unique/uniq
+ * @kind function
+ *
+ * @description
+ * get collection and filter duplicate members
+ * if uniqueFilter get a property(nested to) as argument it's
+ * filter by this property as unique identifier
+ */
+
+angular.module('a8m.unique', [])
+  .filter({
+      unique: ['$parse', uniqFilter],
+      uniq: ['$parse', uniqFilter]
+    });
+
+function uniqFilter($parse) {
+    return function (collection, property) {
+
+      collection = (isObject(collection)) ? toArray(collection) : collection;
+
+      if (!isArray(collection)) {
+        return collection;
+      }
+
+      //store all unique identifiers
+      var uniqueItems = [],
+          get = $parse(property);
+
+      return (isUndefined(property))
+        //if it's kind of primitive array
+        ? collection.filter(function (elm, pos, self) {
+          return self.indexOf(elm) === pos;
+        })
+        //else compare with equals
+        : collection.filter(function (elm) {
+          var prop = get(elm);
+          if(some(uniqueItems, prop)) {
+            return false;
+          }
+          uniqueItems.push(prop);
+          return true;
+      });
+
+      //checked if the unique identifier is already exist
+      function some(array, member) {
+        if(isUndefined(member)) {
+          return false;
+        }
+        return array.some(function(el) {
+          return equals(el, member);
+        });
+      }
+    }
+}
+
+/**
+ * @ngdoc filter
+ * @name where
+ * @kind function
+ *
+ * @description
+ * of each element in a collection to the given properties object,
+ * returning an array of all elements that have equivalent property values.
+ *
+ */
+angular.module('a8m.where', [])
+  .filter('where', function() {
+    return function (collection, object) {
+
+      if(isUndefined(object)) {
+        return collection;
+      }
+      collection = (isObject(collection))
+        ? toArray(collection)
+        : collection;
+
+      return collection.filter(function (elm) {
+        return objectContains(object, elm);
+      });
+    }
+  });
+
+/**
+ * @ngdoc filter
+ * @name xor
+ * @kind function
+ *
+ * @description
+ * Exclusive or filter by expression
+ */
+
+angular.module('a8m.xor', [])
+
+  .filter('xor', ['$parse', function($parse) {
+    return function (col1, col2, expression) {
+
+      expression = expression || false;
+
+      col1 = (isObject(col1)) ? toArray(col1) : col1;
+      col2 = (isObject(col2)) ? toArray(col2) : col2;
+
+      if(!isArray(col1) || !isArray(col2)) return col1;
+
+      return col1.concat(col2)
+        .filter(function(elm) {
+          return !(some(elm, col1) && some(elm, col2));
+        });
+
+      function some(el, col) {
+        var getter = $parse(expression);
+        return col.some(function(dElm) {
+          return expression
+            ? equals(getter(dElm), getter(el))
+            : equals(dElm, el);
+        });
+      }
+    }
+  }]);
+
+/**
+ * @ngdoc filter
+ * @name formatBytes
+ * @kind function
+ *
+ * @description
+ * Convert bytes into appropriate display 
+ * 1024 bytes => 1 KB
+ */
+angular.module('a8m.math.byteFmt', ['a8m.math'])
+  .filter('byteFmt', ['$math', function ($math) {
+    return function (bytes, decimal) {
+
+      if(isNumber(decimal) && isFinite(decimal) && decimal%1===0 && decimal >= 0 &&
+        isNumber(bytes) && isFinite(bytes)) {
+
+        if(bytes < 1024) { // within 1 KB so B
+            return convertToDecimal(bytes, decimal, $math) + ' B';
+        } else if(bytes < 1048576) { // within 1 MB so KB
+            return convertToDecimal((bytes / 1024), decimal, $math) + ' KB';
+        } else if(bytes < 1073741824){ // within 1 GB so MB
+            return convertToDecimal((bytes / 1048576), decimal, $math) + ' MB';
+        } else { // GB or more
+            return convertToDecimal((bytes / 1073741824), decimal, $math) + ' GB';
+        }
+
+	    }
+      return "NaN";
+    }
+  }]);
+/**
+ * @ngdoc filter
+ * @name degrees
+ * @kind function
+ *
+ * @description
+ * Convert angle from radians to degrees
+ */
+angular.module('a8m.math.degrees', ['a8m.math'])
+  .filter('degrees', ['$math', function ($math) {
+    return function (radians, decimal) {
+	  // if decimal is not an integer greater than -1, we cannot do. quit with error "NaN"
+		// if degrees is not a real number, we cannot do also. quit with error "NaN"
+		if(isNumber(decimal) && isFinite(decimal) && decimal%1===0 && decimal >= 0 &&
+          isNumber(radians) && isFinite(radians)) {
+		    var degrees = (radians * 180) / $math.PI;
+		    return $math.round(degrees * $math.pow(10,decimal)) / ($math.pow(10,decimal));
+	    } else {
+          return "NaN";
+		}
+	}
+}]);
+
+ 
+ 
+/**
+ * @ngdoc filter
+ * @name formatBytes
+ * @kind function
+ *
+ * @description
+ * Convert bytes into appropriate display 
+ * 1024 kilobytes => 1 MB
+ */
+angular.module('a8m.math.kbFmt', ['a8m.math'])
+  .filter('kbFmt', ['$math', function ($math) {
+    return function (bytes, decimal) {
+
+      if(isNumber(decimal) && isFinite(decimal) && decimal%1===0 && decimal >= 0 &&
+        isNumber(bytes) && isFinite(bytes)) {
+
+        if(bytes < 1024) { // within 1 MB so KB
+            return convertToDecimal(bytes, decimal, $math) + ' KB';
+        } else if(bytes < 1048576) { // within 1 GB so MB
+            return convertToDecimal((bytes / 1024), decimal, $math) + ' MB';
+        } else {
+            return convertToDecimal((bytes / 1048576), decimal, $math) + ' GB';
+        }
+		  }
+			return "NaN";
+    }
+}]);
+/**
+ * @ngdoc module
+ * @name math
+ * @description
+ * reference to global Math object
+ */
+angular.module('a8m.math', [])
+  .factory('$math', ['$window', function ($window) {
+    return $window.Math;
+  }]);
+
+/**
+ * @ngdoc filter
+ * @name max
+ * @kind function
+ *
+ * @description
+ * Math.max will get an array and return the max value. if an expression
+ * is provided, will return max value by expression.
+ */
+angular.module('a8m.math.max', ['a8m.math'])
+  .filter('max', ['$math', '$parse', function ($math, $parse) {
+    return function (input, expression) {
+
+      if(!isArray(input)) {
+        return input;
+      }
+      return isUndefined(expression)
+        ? $math.max.apply($math, input)
+        : input[indexByMax(input, expression)];
+    };
+
+    /**
+     * @private
+     * @param array
+     * @param exp
+     * @returns {number|*|Number}
+     */
+    function indexByMax(array, exp) {
+      var mappedArray = array.map(function(elm){
+        return $parse(exp)(elm);
+      });
+      return mappedArray.indexOf($math.max.apply($math, mappedArray));
+    }
+  }]);
+/**
+ * @ngdoc filter
+ * @name min
+ * @kind function
+ *
+ * @description
+ * Math.min will get an array and return the min value. if an expression
+ * is provided, will return min value by expression.
+ */
+angular.module('a8m.math.min', ['a8m.math'])
+  .filter('min', ['$math', '$parse', function ($math, $parse) {
+    return function (input, expression) {
+
+      if(!isArray(input)) {
+        return input;
+      }
+      return isUndefined(expression)
+        ? $math.min.apply($math, input)
+        : input[indexByMin(input, expression)];
+    };
+
+    /**
+     * @private
+     * @param array
+     * @param exp
+     * @returns {number|*|Number}
+     */
+    function indexByMin(array, exp) {
+      var mappedArray = array.map(function(elm){
+        return $parse(exp)(elm);
+      });
+      return mappedArray.indexOf($math.min.apply($math, mappedArray));
+    }
+  }]);
+/**
+ * @ngdoc filter
+ * @name Percent
+ * @kind function
+ *
+ * @description
+ * percentage between two numbers
+ */
+angular.module('a8m.math.percent', ['a8m.math'])
+  .filter('percent', ['$math', '$window', function ($math, $window) {
+    return function (input, divided, round) {
+
+      var divider = (isString(input)) ? $window.Number(input) : input;
+      divided = divided || 100;
+      round = round || false;
+
+      if (!isNumber(divider) || $window.isNaN(divider)) return input;
+
+      return round
+        ? $math.round((divider / divided) * 100)
+        : (divider / divided) * 100;
+    }
+  }]);
+
+/**
+ * @ngdoc filter
+ * @name toRadians
+ * @kind function
+ *
+ * @description
+ * Convert angle from degrees to radians
+ */
+angular.module('a8m.math.radians', ['a8m.math'])
+  .filter('radians', ['$math', function ($math) {
+    return function (degrees, decimal) {
+	  // if decimal is not an integer greater than -1, we cannot do. quit with error "NaN"
+	  // if degrees is not a real number, we cannot do also. quit with error "NaN"
+        if(isNumber(decimal) && isFinite(decimal) && decimal%1===0 && decimal >= 0 &&
+          isNumber(degrees) && isFinite(degrees)) {
+          var radians = (degrees * 3.14159265359) / 180;
+          return $math.round(radians * $math.pow(10,decimal)) / ($math.pow(10,decimal));
+		}
+		return "NaN";
+	}
+}]);
+
+ 
+ 
+/**
+ * @ngdoc filter
+ * @name Radix
+ * @kind function
+ *
+ * @description
+ * converting decimal numbers to different bases(radix)
+ */
+angular.module('a8m.math.radix', [])
+  .filter('radix', function () {
+    return function (input, radix) {
+      var RANGE = /^[2-9]$|^[1-2]\d$|^3[0-6]$/;
+
+      if(!isNumber(input) || !RANGE.test(radix)) {
+        return input;
+      }
+
+      return input.toString(radix).toUpperCase();
+    }
+  });
+
+/**
+ * @ngdoc filter
+ * @name formatBytes
+ * @kind function
+ *
+ * @description
+ * Convert number into abbreviations.
+ * i.e: K for one thousand, M for Million, B for billion
+ * e.g: number of users:235,221, decimal:1 => 235.2 K
+ */
+angular.module('a8m.math.shortFmt', ['a8m.math'])
+  .filter('shortFmt', ['$math', function ($math) {
+    return function (number, decimal) {
+      if(isNumber(decimal) && isFinite(decimal) && decimal%1===0 && decimal >= 0 &&
+        isNumber(number) && isFinite(number)){
+                    
+          if(number < 1e3) {
+              return number;
+          } else if(number < 1e6) {
+              return convertToDecimal((number / 1e3), decimal, $math) + ' K';
+          } else if(number < 1e9){
+              return convertToDecimal((number / 1e6), decimal, $math) + ' M';
+          } else {
+            return convertToDecimal((number / 1e9), decimal, $math) + ' B';
+          }
+
+	  }
+    return "NaN";
+	}
+}]);
+/**
+ * @ngdoc filter
+ * @name sum
+ * @kind function
+ *
+ * @description
+ * Sum up all values within an array
+ */
+angular.module('a8m.math.sum', [])
+  .filter('sum', function () {
+    return function (input, initial) {
+      return !isArray(input)
+        ? input
+        : input.reduce(function(prev, curr) {
+          return prev + curr;
+        }, initial || 0);
+    }
+  });
+
+/**
+ * @ngdoc filter
+ * @name endsWith
+ * @kind function
+ *
+ * @description
+ * checks whether string ends with the ends parameter.
+ */
+angular.module('a8m.ends-with', [])
+
+  .filter('endsWith', function () {
+    return function (input, ends, csensitive) {
+
+      var sensitive = csensitive || false,
+        position;
+
+      if(!isString(input) || isUndefined(ends)) {
+        return input;
+      }
+
+      input = (sensitive) ? input : input.toLowerCase();
+      position = input.length - ends.length;
+
+      return input.indexOf((sensitive) ? ends : ends.toLowerCase(), position) !== -1;
+    }
+  });
+
+/**
+ * @ngdoc filter
+ * @name latinize
+ * @kind function
+ *
+ * @description
+ * remove accents/diacritics from a string
+ */
+angular.module('a8m.latinize', [])
+  .filter('latinize',[ function () {
+    var defaultDiacriticsRemovalap = [
+      {'base':'A', 'letters':'\u0041\u24B6\uFF21\u00C0\u00C1\u00C2\u1EA6\u1EA4\u1EAA\u1EA8\u00C3\u0100\u0102\u1EB0\u1EAE\u1EB4\u1EB2\u0226\u01E0\u00C4\u01DE\u1EA2\u00C5\u01FA\u01CD\u0200\u0202\u1EA0\u1EAC\u1EB6\u1E00\u0104\u023A\u2C6F'},
+      {'base':'AA','letters':'\uA732'},
+      {'base':'AE','letters':'\u00C6\u01FC\u01E2'},
+      {'base':'AO','letters':'\uA734'},
+      {'base':'AU','letters':'\uA736'},
+      {'base':'AV','letters':'\uA738\uA73A'},
+      {'base':'AY','letters':'\uA73C'},
+      {'base':'B', 'letters':'\u0042\u24B7\uFF22\u1E02\u1E04\u1E06\u0243\u0182\u0181'},
+      {'base':'C', 'letters':'\u0043\u24B8\uFF23\u0106\u0108\u010A\u010C\u00C7\u1E08\u0187\u023B\uA73E'},
+      {'base':'D', 'letters':'\u0044\u24B9\uFF24\u1E0A\u010E\u1E0C\u1E10\u1E12\u1E0E\u0110\u018B\u018A\u0189\uA779'},
+      {'base':'DZ','letters':'\u01F1\u01C4'},
+      {'base':'Dz','letters':'\u01F2\u01C5'},
+      {'base':'E', 'letters':'\u0045\u24BA\uFF25\u00C8\u00C9\u00CA\u1EC0\u1EBE\u1EC4\u1EC2\u1EBC\u0112\u1E14\u1E16\u0114\u0116\u00CB\u1EBA\u011A\u0204\u0206\u1EB8\u1EC6\u0228\u1E1C\u0118\u1E18\u1E1A\u0190\u018E'},
+      {'base':'F', 'letters':'\u0046\u24BB\uFF26\u1E1E\u0191\uA77B'},
+      {'base':'G', 'letters':'\u0047\u24BC\uFF27\u01F4\u011C\u1E20\u011E\u0120\u01E6\u0122\u01E4\u0193\uA7A0\uA77D\uA77E'},
+      {'base':'H', 'letters':'\u0048\u24BD\uFF28\u0124\u1E22\u1E26\u021E\u1E24\u1E28\u1E2A\u0126\u2C67\u2C75\uA78D'},
+      {'base':'I', 'letters':'\u0049\u24BE\uFF29\u00CC\u00CD\u00CE\u0128\u012A\u012C\u0130\u00CF\u1E2E\u1EC8\u01CF\u0208\u020A\u1ECA\u012E\u1E2C\u0197'},
+      {'base':'J', 'letters':'\u004A\u24BF\uFF2A\u0134\u0248'},
+      {'base':'K', 'letters':'\u004B\u24C0\uFF2B\u1E30\u01E8\u1E32\u0136\u1E34\u0198\u2C69\uA740\uA742\uA744\uA7A2'},
+      {'base':'L', 'letters':'\u004C\u24C1\uFF2C\u013F\u0139\u013D\u1E36\u1E38\u013B\u1E3C\u1E3A\u0141\u023D\u2C62\u2C60\uA748\uA746\uA780'},
+      {'base':'LJ','letters':'\u01C7'},
+      {'base':'Lj','letters':'\u01C8'},
+      {'base':'M', 'letters':'\u004D\u24C2\uFF2D\u1E3E\u1E40\u1E42\u2C6E\u019C'},
+      {'base':'N', 'letters':'\u004E\u24C3\uFF2E\u01F8\u0143\u00D1\u1E44\u0147\u1E46\u0145\u1E4A\u1E48\u0220\u019D\uA790\uA7A4'},
+      {'base':'NJ','letters':'\u01CA'},
+      {'base':'Nj','letters':'\u01CB'},
+      {'base':'O', 'letters':'\u004F\u24C4\uFF2F\u00D2\u00D3\u00D4\u1ED2\u1ED0\u1ED6\u1ED4\u00D5\u1E4C\u022C\u1E4E\u014C\u1E50\u1E52\u014E\u022E\u0230\u00D6\u022A\u1ECE\u0150\u01D1\u020C\u020E\u01A0\u1EDC\u1EDA\u1EE0\u1EDE\u1EE2\u1ECC\u1ED8\u01EA\u01EC\u00D8\u01FE\u0186\u019F\uA74A\uA74C'},
+      {'base':'OI','letters':'\u01A2'},
+      {'base':'OO','letters':'\uA74E'},
+      {'base':'OU','letters':'\u0222'},
+      {'base':'OE','letters':'\u008C\u0152'},
+      {'base':'oe','letters':'\u009C\u0153'},
+      {'base':'P', 'letters':'\u0050\u24C5\uFF30\u1E54\u1E56\u01A4\u2C63\uA750\uA752\uA754'},
+      {'base':'Q', 'letters':'\u0051\u24C6\uFF31\uA756\uA758\u024A'},
+      {'base':'R', 'letters':'\u0052\u24C7\uFF32\u0154\u1E58\u0158\u0210\u0212\u1E5A\u1E5C\u0156\u1E5E\u024C\u2C64\uA75A\uA7A6\uA782'},
+      {'base':'S', 'letters':'\u0053\u24C8\uFF33\u1E9E\u015A\u1E64\u015C\u1E60\u0160\u1E66\u1E62\u1E68\u0218\u015E\u2C7E\uA7A8\uA784'},
+      {'base':'T', 'letters':'\u0054\u24C9\uFF34\u1E6A\u0164\u1E6C\u021A\u0162\u1E70\u1E6E\u0166\u01AC\u01AE\u023E\uA786'},
+      {'base':'TZ','letters':'\uA728'},
+      {'base':'U', 'letters':'\u0055\u24CA\uFF35\u00D9\u00DA\u00DB\u0168\u1E78\u016A\u1E7A\u016C\u00DC\u01DB\u01D7\u01D5\u01D9\u1EE6\u016E\u0170\u01D3\u0214\u0216\u01AF\u1EEA\u1EE8\u1EEE\u1EEC\u1EF0\u1EE4\u1E72\u0172\u1E76\u1E74\u0244'},
+      {'base':'V', 'letters':'\u0056\u24CB\uFF36\u1E7C\u1E7E\u01B2\uA75E\u0245'},
+      {'base':'VY','letters':'\uA760'},
+      {'base':'W', 'letters':'\u0057\u24CC\uFF37\u1E80\u1E82\u0174\u1E86\u1E84\u1E88\u2C72'},
+      {'base':'X', 'letters':'\u0058\u24CD\uFF38\u1E8A\u1E8C'},
+      {'base':'Y', 'letters':'\u0059\u24CE\uFF39\u1EF2\u00DD\u0176\u1EF8\u0232\u1E8E\u0178\u1EF6\u1EF4\u01B3\u024E\u1EFE'},
+      {'base':'Z', 'letters':'\u005A\u24CF\uFF3A\u0179\u1E90\u017B\u017D\u1E92\u1E94\u01B5\u0224\u2C7F\u2C6B\uA762'},
+      {'base':'a', 'letters':'\u0061\u24D0\uFF41\u1E9A\u00E0\u00E1\u00E2\u1EA7\u1EA5\u1EAB\u1EA9\u00E3\u0101\u0103\u1EB1\u1EAF\u1EB5\u1EB3\u0227\u01E1\u00E4\u01DF\u1EA3\u00E5\u01FB\u01CE\u0201\u0203\u1EA1\u1EAD\u1EB7\u1E01\u0105\u2C65\u0250'},
+      {'base':'aa','letters':'\uA733'},
+      {'base':'ae','letters':'\u00E6\u01FD\u01E3'},
+      {'base':'ao','letters':'\uA735'},
+      {'base':'au','letters':'\uA737'},
+      {'base':'av','letters':'\uA739\uA73B'},
+      {'base':'ay','letters':'\uA73D'},
+      {'base':'b', 'letters':'\u0062\u24D1\uFF42\u1E03\u1E05\u1E07\u0180\u0183\u0253'},
+      {'base':'c', 'letters':'\u0063\u24D2\uFF43\u0107\u0109\u010B\u010D\u00E7\u1E09\u0188\u023C\uA73F\u2184'},
+      {'base':'d', 'letters':'\u0064\u24D3\uFF44\u1E0B\u010F\u1E0D\u1E11\u1E13\u1E0F\u0111\u018C\u0256\u0257\uA77A'},
+      {'base':'dz','letters':'\u01F3\u01C6'},
+      {'base':'e', 'letters':'\u0065\u24D4\uFF45\u00E8\u00E9\u00EA\u1EC1\u1EBF\u1EC5\u1EC3\u1EBD\u0113\u1E15\u1E17\u0115\u0117\u00EB\u1EBB\u011B\u0205\u0207\u1EB9\u1EC7\u0229\u1E1D\u0119\u1E19\u1E1B\u0247\u025B\u01DD'},
+      {'base':'f', 'letters':'\u0066\u24D5\uFF46\u1E1F\u0192\uA77C'},
+      {'base':'g', 'letters':'\u0067\u24D6\uFF47\u01F5\u011D\u1E21\u011F\u0121\u01E7\u0123\u01E5\u0260\uA7A1\u1D79\uA77F'},
+      {'base':'h', 'letters':'\u0068\u24D7\uFF48\u0125\u1E23\u1E27\u021F\u1E25\u1E29\u1E2B\u1E96\u0127\u2C68\u2C76\u0265'},
+      {'base':'hv','letters':'\u0195'},
+      {'base':'i', 'letters':'\u0069\u24D8\uFF49\u00EC\u00ED\u00EE\u0129\u012B\u012D\u00EF\u1E2F\u1EC9\u01D0\u0209\u020B\u1ECB\u012F\u1E2D\u0268\u0131'},
+      {'base':'j', 'letters':'\u006A\u24D9\uFF4A\u0135\u01F0\u0249'},
+      {'base':'k', 'letters':'\u006B\u24DA\uFF4B\u1E31\u01E9\u1E33\u0137\u1E35\u0199\u2C6A\uA741\uA743\uA745\uA7A3'},
+      {'base':'l', 'letters':'\u006C\u24DB\uFF4C\u0140\u013A\u013E\u1E37\u1E39\u013C\u1E3D\u1E3B\u017F\u0142\u019A\u026B\u2C61\uA749\uA781\uA747'},
+      {'base':'lj','letters':'\u01C9'},
+      {'base':'m', 'letters':'\u006D\u24DC\uFF4D\u1E3F\u1E41\u1E43\u0271\u026F'},
+      {'base':'n', 'letters':'\u006E\u24DD\uFF4E\u01F9\u0144\u00F1\u1E45\u0148\u1E47\u0146\u1E4B\u1E49\u019E\u0272\u0149\uA791\uA7A5'},
+      {'base':'nj','letters':'\u01CC'},
+      {'base':'o', 'letters':'\u006F\u24DE\uFF4F\u00F2\u00F3\u00F4\u1ED3\u1ED1\u1ED7\u1ED5\u00F5\u1E4D\u022D\u1E4F\u014D\u1E51\u1E53\u014F\u022F\u0231\u00F6\u022B\u1ECF\u0151\u01D2\u020D\u020F\u01A1\u1EDD\u1EDB\u1EE1\u1EDF\u1EE3\u1ECD\u1ED9\u01EB\u01ED\u00F8\u01FF\u0254\uA74B\uA74D\u0275'},
+      {'base':'oi','letters':'\u01A3'},
+      {'base':'ou','letters':'\u0223'},
+      {'base':'oo','letters':'\uA74F'},
+      {'base':'p','letters':'\u0070\u24DF\uFF50\u1E55\u1E57\u01A5\u1D7D\uA751\uA753\uA755'},
+      {'base':'q','letters':'\u0071\u24E0\uFF51\u024B\uA757\uA759'},
+      {'base':'r','letters':'\u0072\u24E1\uFF52\u0155\u1E59\u0159\u0211\u0213\u1E5B\u1E5D\u0157\u1E5F\u024D\u027D\uA75B\uA7A7\uA783'},
+      {'base':'s','letters':'\u0073\u24E2\uFF53\u00DF\u015B\u1E65\u015D\u1E61\u0161\u1E67\u1E63\u1E69\u0219\u015F\u023F\uA7A9\uA785\u1E9B'},
+      {'base':'t','letters':'\u0074\u24E3\uFF54\u1E6B\u1E97\u0165\u1E6D\u021B\u0163\u1E71\u1E6F\u0167\u01AD\u0288\u2C66\uA787'},
+      {'base':'tz','letters':'\uA729'},
+      {'base':'u','letters': '\u0075\u24E4\uFF55\u00F9\u00FA\u00FB\u0169\u1E79\u016B\u1E7B\u016D\u00FC\u01DC\u01D8\u01D6\u01DA\u1EE7\u016F\u0171\u01D4\u0215\u0217\u01B0\u1EEB\u1EE9\u1EEF\u1EED\u1EF1\u1EE5\u1E73\u0173\u1E77\u1E75\u0289'},
+      {'base':'v','letters':'\u0076\u24E5\uFF56\u1E7D\u1E7F\u028B\uA75F\u028C'},
+      {'base':'vy','letters':'\uA761'},
+      {'base':'w','letters':'\u0077\u24E6\uFF57\u1E81\u1E83\u0175\u1E87\u1E85\u1E98\u1E89\u2C73'},
+      {'base':'x','letters':'\u0078\u24E7\uFF58\u1E8B\u1E8D'},
+      {'base':'y','letters':'\u0079\u24E8\uFF59\u1EF3\u00FD\u0177\u1EF9\u0233\u1E8F\u00FF\u1EF7\u1E99\u1EF5\u01B4\u024F\u1EFF'},
+      {'base':'z','letters':'\u007A\u24E9\uFF5A\u017A\u1E91\u017C\u017E\u1E93\u1E95\u01B6\u0225\u0240\u2C6C\uA763'}
+    ];
+
+    var diacriticsMap = {};
+    for (var i = 0; i < defaultDiacriticsRemovalap.length; i++) {
+      var letters = defaultDiacriticsRemovalap[i].letters.split("");
+      for (var j = 0; j < letters.length ; j++){
+        diacriticsMap[letters[j]] = defaultDiacriticsRemovalap[i].base;
+      }
+    }
+
+    // "what?" version ... http://jsperf.com/diacritics/12
+    function removeDiacritics (str) {
+      return str.replace(/[^\u0000-\u007E]/g, function(a){
+        return diacriticsMap[a] || a;
+      });
+    }
+
+    return function (input) {
+
+      return isString(input)
+        ? removeDiacritics(input)
+        : input;
+    }
+  }]);
+
+/**
+ * @ngdoc filter
+ * @name ltrim
+ * @kind function
+ *
+ * @description
+ * Left trim. Similar to trimFilter, but only for left side.
+ */
+angular.module('a8m.ltrim', [])
+  .filter('ltrim', function () {
+    return function(input, chars) {
+
+      var trim = chars || '\\s';
+
+      return isString(input)
+        ? input.replace(new RegExp('^' + trim + '+'), '')
+        : input;
+    }
+  });
+
+/**
+ * @ngdoc filter
+ * @name match
+ * @kind function
+ *
+ * @description
+ * Return the matched pattern in a string.
+ */
+angular.module('a8m.match', [])
+  .filter('match', function () {
+    return function (input, pattern, flag) {
+
+      var reg = new RegExp(pattern, flag);
+
+      return isString(input)
+        ? input.match(reg)
+        : null;
+    }
+  });
+
+/**
+ * @ngdoc filter
+ * @name repeat
+ * @kind function
+ *
+ * @description
+ * Repeats a string n times
+ */
+angular.module('a8m.repeat', [])
+  .filter('repeat',[ function () {
+    return function (input, n, separator) {
+
+      var times = ~~n;
+
+      if(!isString(input)) {
+        return input;
+      }
+
+      return !times
+        ? input
+        : strRepeat(input, --n, separator || '');
+    }
+  }]);
+
+/**
+ * Repeats a string n times with given separator
+ * @param str string to repeat
+ * @param n number of times
+ * @param sep separator
+ * @returns {*}
+ */
+function strRepeat(str, n, sep) {
+  if(!n) {
+    return str;
+  }
+  return str + sep + strRepeat(str, --n, sep);
+}
+/**
+* @ngdoc filter
+* @name rtrim
+* @kind function
+*
+* @description
+* Right trim. Similar to trimFilter, but only for right side.
+*/
+angular.module('a8m.rtrim', [])
+  .filter('rtrim', function () {
+    return function(input, chars) {
+
+      var trim = chars || '\\s';
+
+      return isString(input)
+        ? input.replace(new RegExp(trim + '+$'), '')
+        : input;
+    }
+  });
+
+/**
+ * @ngdoc filter
+ * @name slugify
+ * @kind function
+ *
+ * @description
+ * remove spaces from string, replace with "-" or given argument
+ */
+angular.module('a8m.slugify', [])
+  .filter('slugify',[ function () {
+    return function (input, sub) {
+
+      var replace = (isUndefined(sub)) ? '-' : sub;
+
+      return isString(input)
+        ? input.toLowerCase().replace(/\s+/g, replace)
+        : input;
+    }
+  }]);
+
+/**
+ * @ngdoc filter
+ * @name startWith
+ * @kind function
+ *
+ * @description
+ * checks whether string starts with the starts parameter.
+ */
+angular.module('a8m.starts-with', [])
+  .filter('startsWith', function () {
+    return function (input, start, csensitive) {
+
+      var sensitive = csensitive || false;
+
+      if(!isString(input) || isUndefined(start)) {
+        return input;
+      }
+
+      input = (sensitive) ? input : input.toLowerCase();
+
+      return !input.indexOf((sensitive) ? start : start.toLowerCase());
+    }
+  });
+
+/**
+ * @ngdoc filter
+ * @name stringular
+ * @kind function
+ *
+ * @description
+ * get string with {n} and replace match with enumeration values
+ */
+angular.module('a8m.stringular', [])
+  .filter('stringular', function () {
+    return function(input) {
+
+      var args = Array.prototype.slice.call(arguments, 1);
+
+      return input.replace(/{(\d+)}/g, function (match, number) {
+        return isUndefined(args[number]) ? match : args[number];
+      });
+    }
+  });
+
+/**
+ * @ngdoc filter
+ * @name stripTags
+ * @kind function
+ *
+ * @description
+ * strip html tags from string
+ */
+angular.module('a8m.strip-tags', [])
+  .filter('stripTags', function () {
+    return function(input) {
+      return isString(input)
+        ? input.replace(/<\S[^><]*>/g, '')
+        : input;
+    }
+  });
+
+/**
+ * @ngdoc filter
+ * @name test
+ * @kind function
+ *
+ * @description
+ * test if a string match a pattern.
+ */
+angular.module('a8m.test', [])
+  .filter('test', function () {
+    return function (input, pattern, flag) {
+
+      var reg = new RegExp(pattern, flag);
+
+      return isString(input)
+        ? reg.test(input)
+        : input;
+    }
+  });
+
+/**
+ * @ngdoc filter
+ * @name trim
+ * @kind function
+ *
+ * @description
+ *  Strip whitespace (or other characters) from the beginning and end of a string
+ */
+angular.module('a8m.trim', [])
+  .filter('trim', function () {
+    return function(input, chars) {
+
+      var trim = chars || '\\s';
+
+      return isString(input)
+        ? input.replace(new RegExp('^' + trim + '+|' + trim + '+$', 'g'), '')
+        : input;
+    }
+  });
+
+/**
+ * @ngdoc filter
+ * @name truncate
+ * @kind function
+ *
+ * @description
+ * truncates a string given a specified length, providing a custom string to denote an omission.
+ */
+angular.module('a8m.truncate', [])
+  .filter('truncate', function () {
+    return function(input, length, suffix, preserve) {
+
+      length = isUndefined(length) ? input.length : length;
+      preserve = preserve || false;
+      suffix = suffix || '';
+
+      if(!isString(input) || (input.length <= length)) return input;
+
+      return input.substring(0, (preserve)
+        ? ((input.indexOf(' ', length) === -1) ? input.length : input.indexOf(' ', length))
+        : length) + suffix;
+    };
+  });
+
+/**
+ * @ngdoc filter
+ * @name ucfirst
+ * @kind function
+ *
+ * @description
+ * ucfirst
+ */
+angular.module('a8m.ucfirst', [])
+  .filter('ucfirst', [function() {
+    return function(input) {
+      return isString(input)
+        ? input
+            .split(' ')
+            .map(function (ch) {
+              return ch.charAt(0).toUpperCase() + ch.substring(1);
+            })
+            .join(' ')
+        : input;
+    }
+  }]);
+
+/**
+ * @ngdoc filter
+ * @name uriComponentEncode
+ * @kind function
+ *
+ * @description
+ * get string as parameter and return encoded string
+ */
+angular.module('a8m.uri-component-encode', [])
+  .filter('uriComponentEncode',['$window', function ($window) {
+      return function (input) {
+        return isString(input)
+          ? $window.encodeURIComponent(input)
+          : input;
+      }
+    }]);
+
+/**
+ * @ngdoc filter
+ * @name uriEncode
+ * @kind function
+ *
+ * @description
+ * get string as parameter and return encoded string
+ */
+angular.module('a8m.uri-encode', [])
+  .filter('uriEncode',['$window', function ($window) {
+      return function (input) {
+        return isString(input)
+          ? $window.encodeURI(input)
+          : input;
+      }
+    }]);
+
+/**
+ * @ngdoc filter
+ * @name wrap
+ * @kind function
+ *
+ * @description
+ * Wrap a string with another string
+ */
+angular.module('a8m.wrap', [])
+  .filter('wrap', function () {
+    return function(input, wrap, ends) {
+      return isString(input) && isDefined(wrap)
+        ? [wrap, input, ends || wrap].join('')
+        : input;
+    }
+  });
+
+/**
+ * @ngdoc provider
+ * @name filterWatcher
+ * @kind function
+ *
+ * @description
+ * store specific filters result in $$cache, based on scope life time(avoid memory leak).
+ * on scope.$destroy remove it's cache from $$cache container
+ */
+
+angular.module('a8m.filter-watcher', [])
+  .provider('filterWatcher', function() {
+
+    this.$get = ['$window', '$rootScope', function($window, $rootScope) {
+
+      /**
+       * Cache storing
+       * @type {Object}
+       */
+      var $$cache = {};
+
+      /**
+       * Scope listeners container
+       * scope.$destroy => remove all cache keys
+       * bind to current scope.
+       * @type {Object}
+       */
+      var $$listeners = {};
+
+      /**
+       * $timeout without triggering the digest cycle
+       * @type {function}
+       */
+      var $$timeout = $window.setTimeout;
+
+      /**
+       * @description
+       * get `HashKey` string based on the given arguments.
+       * @param fName
+       * @param args
+       * @returns {string}
+       */
+      function getHashKey(fName, args) {
+        return [fName, angular.toJson(args)]
+          .join('#')
+          .replace(/"/g,'');
+      }
+
+      /**
+       * @description
+       * fir on $scope.$destroy,
+       * remove cache based scope from `$$cache`,
+       * and remove itself from `$$listeners`
+       * @param event
+       */
+      function removeCache(event) {
+        var id = event.targetScope.$id;
+        forEach($$listeners[id], function(key) {
+          delete $$cache[key];
+        });
+        delete $$listeners[id];
+      }
+
+      /**
+       * @description
+       * for angular version that greater than v.1.3.0
+       * if clear cache when the digest cycle end.
+       */
+      function cleanStateless() {
+        $$timeout(function() {
+          if(!$rootScope.$$phase)
+            $$cache = {};
+        });
+      }
+
+      /**
+       * @description
+       * Store hashKeys in $$listeners container
+       * on scope.$destroy, remove them all(bind an event).
+       * @param scope
+       * @param hashKey
+       * @returns {*}
+       */
+      function addListener(scope, hashKey) {
+        var id = scope.$id;
+        if(isUndefined($$listeners[id])) {
+          scope.$on('$destroy', removeCache);
+          $$listeners[id] = [];
+        }
+        return $$listeners[id].push(hashKey);
+      }
+
+      /**
+       * @description
+       * return the `cacheKey` or undefined.
+       * @param filterName
+       * @param args
+       * @returns {*}
+       */
+      function $$isMemoized(filterName, args) {
+        var hashKey = getHashKey(filterName, args);
+        return $$cache[hashKey];
+      }
+
+      /**
+       * @description
+       * store `result` in `$$cache` container, based on the hashKey.
+       * add $destroy listener and return result
+       * @param filterName
+       * @param args
+       * @param scope
+       * @param result
+       * @returns {*}
+       */
+      function $$memoize(filterName, args, scope, result) {
+        var hashKey = getHashKey(filterName, args);
+        //store result in `$$cache` container
+        $$cache[hashKey] = result;
+        // for angular versions that less than 1.3
+        // add to `$destroy` listener, a cleaner callback
+        if(isScope(scope)) {
+          addListener(scope, hashKey);
+        } else {
+          cleanStateless();
+        }
+        return result;
+      }
+
+      return {
+        isMemoized: $$isMemoized,
+        memoize: $$memoize
+      }
+
+    }];
+  });
+  
+
+/**
+ * @ngdoc module
+ * @name angular.filters
+ * @description
+ * Bunch of useful filters for angularJS
+ */
+
+angular.module('angular.filter', [
+
+  'a8m.ucfirst',
+  'a8m.uri-encode',
+  'a8m.uri-component-encode',
+  'a8m.slugify',
+  'a8m.latinize',
+  'a8m.strip-tags',
+  'a8m.stringular',
+  'a8m.truncate',
+  'a8m.starts-with',
+  'a8m.ends-with',
+  'a8m.wrap',
+  'a8m.trim',
+  'a8m.ltrim',
+  'a8m.rtrim',
+  'a8m.repeat',
+  'a8m.test',
+  'a8m.match',
+
+  'a8m.to-array',
+  'a8m.concat',
+  'a8m.contains',
+  'a8m.unique',
+  'a8m.is-empty',
+  'a8m.after',
+  'a8m.after-where',
+  'a8m.before',
+  'a8m.before-where',
+  'a8m.defaults',
+  'a8m.where',
+  'a8m.reverse',
+  'a8m.remove',
+  'a8m.remove-with',
+  'a8m.group-by',
+  'a8m.count-by',
+  'a8m.search-field',
+  'a8m.fuzzy-by',
+  'a8m.fuzzy',
+  'a8m.omit',
+  'a8m.pick',
+  'a8m.every',
+  'a8m.filter-by',
+  'a8m.xor',
+  'a8m.map',
+  'a8m.first',
+  'a8m.last',
+  'a8m.flatten',
+  'a8m.join',
+
+  'a8m.math',
+  'a8m.math.max',
+  'a8m.math.min',
+  'a8m.math.percent',
+  'a8m.math.radix',
+  'a8m.math.sum',
+  'a8m.math.degrees',
+  'a8m.math.radians',
+  'a8m.math.byteFmt',
+  'a8m.math.kbFmt',
+  'a8m.math.shortFmt',
+
+  'a8m.angular',
+  'a8m.conditions',
+  'a8m.is-null',
+
+  'a8m.filter-watcher'
+]);
+})( window, window.angular );
 // Generated by CoffeeScript 1.6.2
 /*!
 jQuery Waypoints - v2.0.5
@@ -50004,7 +51984,7 @@ angular.module('angulartics', [])
         if ($analytics.settings.pageTracking.autoBasePath) {
           $analytics.settings.pageTracking.basePath = $window.location.pathname;
         }
-        if ($analytics.settings.trackRelativePath) {
+        if ($analytics.settings.pageTracking.trackRelativePath) {
           var url = $analytics.settings.pageTracking.basePath + $location.url();
           $analytics.pageTrack(url, $location);
         } else {
@@ -50130,7 +52110,7 @@ angular.module('angulartics.adobe.analytics', ['angulartics'])
   $analyticsProvider.settings.trackRelativePath = true;
 
   $analyticsProvider.registerPageTrack(function (path) {
-    if (window.s) s.t([path]);
+    if (window.s) s.t({pageName:path});
   });
 
   /**
@@ -50360,16 +52340,20 @@ angular.module('angulartics.google.analytics', ['angulartics'])
   // to wrap these inside angulartics.waitForVendorApi
 
   $analyticsProvider.settings.trackRelativePath = true;
-  
+
   // Set the default settings for this module
   $analyticsProvider.settings.ga = {
     // array of additional account names (only works for analyticsjs)
-    additionalAccountNames: undefined
+    additionalAccountNames: undefined,
+    userId: null
   };
 
   $analyticsProvider.registerPageTrack(function (path) {
     if (window._gaq) _gaq.push(['_trackPageview', path]);
     if (window.ga) {
+      if ($analyticsProvider.settings.ga.userId) {
+        ga('set', '&uid', $analyticsProvider.settings.ga.userId);
+      }
       ga('send', 'pageview', path);
       angular.forEach($analyticsProvider.settings.ga.additionalAccountNames, function (accountName){
         ga(accountName +'.send', 'pageview', path);
@@ -50390,9 +52374,10 @@ angular.module('angulartics.google.analytics', ['angulartics'])
    */
   $analyticsProvider.registerEventTrack(function (action, properties) {
 
-    // do nothing if there is no category (it's required by GA)
-    if (!properties || !properties.category) { 
-		return; 
+    // Google Analytics requires an Event Category
+    if (!properties || !properties.category) {
+    	properties = properties || {};
+		properties.category = 'Event';
 	}
     // GA requires that eventValue be an integer, see:
     // https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference#eventValue
@@ -50405,11 +52390,13 @@ angular.module('angulartics.google.analytics', ['angulartics'])
     if (window.ga) {
 
       var eventOptions = {
-        eventCategory: properties.category || null,
-        eventAction: action || null,
-        eventLabel: properties.label ||  null,
-        eventValue: properties.value || null,
-        nonInteraction: properties.noninteraction || null
+        eventCategory: properties.category,
+        eventAction: action,
+        eventLabel: properties.label,
+        eventValue: properties.value,
+        nonInteraction: properties.noninteraction,
+        page: properties.page || window.location.hash.substring(1),
+        userId: $analyticsProvider.settings.ga.userId
       };
 
       // add custom dimensions and metrics
@@ -50431,6 +52418,10 @@ angular.module('angulartics.google.analytics', ['angulartics'])
       _gaq.push(['_trackEvent', properties.category, action, properties.label, properties.value, properties.noninteraction]);
     }
 
+  });
+
+  $analyticsProvider.registerSetUsername(function (userId) {
+    $analyticsProvider.settings.ga.userId = userId;
   });
 
 }]);
@@ -50591,6 +52582,12 @@ angular.module('angulartics.mixpanel', ['angulartics'])
   angulartics.waitForVendorApi('mixpanel', 500, '__loaded', function (mixpanel) {
     $analyticsProvider.registerSetUserProperties(function (properties) {
       mixpanel.people.set(properties);
+    });
+  });
+
+  angulartics.waitForVendorApi('mixpanel', 500, '__loaded', function (mixpanel) {
+    $analyticsProvider.registerPageTrack(function (path) {
+      mixpanel.track( "Page Viewed", { "page": path } );
     });
   });
 
@@ -50768,6 +52765,19 @@ angular.module('angulartics.scroll', ['angulartics'])
           }
         }
       });
+      
+      // Segment Alias Method
+      // https://segment.com/docs/libraries/analytics.js/#alias
+      // analytics.alias(userId, previousId, options, callback);
+      $analyticsProvider.registerSetAlias(function (userId, previousId, options, callback) {
+        try {
+          analytics.alias(userId, previousId, options, callback);
+        } catch (e) {
+          if (!(e instanceof ReferenceError)) {
+            throw e;
+          }
+        }
+      });
 
     }]);
 })(angular);
@@ -50832,6 +52842,20 @@ angular.module('angulartics.woopra', ['angulartics'])
 
   $analyticsProvider.registerEventTrack(function (action, properties) {
     woopra.track(action, properties);
+  });
+
+  $analyticsProvider.registerSetUsername(function (email) {
+    woopra
+      .identify('email', email)
+      .push();
+  });
+
+  $analyticsProvider.registerSetUserProperties(function (properties) {
+    if (properties.email) {
+      woopra
+        .identify(properties)
+        .push();
+    }
   });
 }]);
 })(angular);
